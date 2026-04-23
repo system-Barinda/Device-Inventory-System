@@ -50,3 +50,25 @@ asset-inventory-management-system/
 │
 ├── pom.xml
 └── README.md
+
+
+
+## RELATIONSHIP (VERY IMPORTANT)
+
+One user → many assignments,
+One device → many assignments,
+Assignments connect users & devices,
+Audit history logs all actions,
+## SIMPLE VISUAL IDEA
+User ───────┐
+            ├── Assignment ─── Device
+            │
+            └── Audit History
+            
+##             WHY THIS DESIGN IS PROFESSIONAL
+
+1 Tracks ownership
+2 Tracks device status
+3 Keeps history (audit trail)
+4 Supports reporting
+5 Scalable for real company use
