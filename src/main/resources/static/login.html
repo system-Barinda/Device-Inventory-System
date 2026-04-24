@@ -301,9 +301,13 @@ async function handleLogin(){
 	    });
 
 	    if(res.ok){
-	      showMsg('login-msg','Login successful! Redirecting...','success');
+	      const data = await res.json();
 
-	      // ✅ REDIRECT AFTER 1 SECOND
+	      // ✅ SAVE SESSION
+	      localStorage.setItem("user", JSON.stringify(data));
+
+	      showMsg('login-msg','Login successful','success');
+
 	      setTimeout(()=>{
 	        window.location.href = "dashboard.html";
 	      },1000);

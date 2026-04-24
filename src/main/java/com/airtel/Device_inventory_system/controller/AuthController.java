@@ -39,20 +39,22 @@ public class AuthController {
 
     // LOGIN
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
 
         String email = body.get("email");
         String password = body.get("password");
 
-        // ✅ FIX 2: validation
-        if (email == null || password == null || email.isEmpty() || password.isEmpty()) {
-            return ResponseEntity.badRequest().body("Email and password required");
-        }
-
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user != null && user.getPassword().equals(password)) {
-            return ResponseEntity.ok("Login successful"); // (we upgrade this next)
+
+            // ✅ Return user info (simple session)
+            return ResponseEntity.ok(Map.of(
+                "message", "Login successful",
+                "userId", user.getUserId(),
+                "fullName", user.getFullName(),
+                "email", user.getEmail()
+            ));
         }
 
         return ResponseEntity.status(401).body("Invalid credentials");

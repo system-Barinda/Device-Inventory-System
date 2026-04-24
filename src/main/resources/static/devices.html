@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devices - Airtel Inventory</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
+body{
+  background:#f4f7fb;
+}
+
+/* NAVBAR */
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 40px;
+  background:white;
+}
+
+.logo{font-weight:bold;color:#333}
+
+.nav-links a{
+  margin:0 10px;
+  text-decoration:none;
+  color:#555;
+}
+
+.logout{
+  background:#e74c3c;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* CONTAINER */
+.container{
+  padding:40px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+/* CARD */
+.card{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.05);
+}
+
+.card h2{
+  margin-bottom:15px;
+  color:#333;
+}
+
+/* FORM */
+.field{
+  margin-bottom:12px;
+}
+
+.field label{
+  display:block;
+  font-size:13px;
+  margin-bottom:5px;
+  color:#555;
+}
+
+.field input, .field select{
+  width:100%;
+  padding:8px;
+  border:1px solid #ccc;
+  border-radius:6px;
+}
+
+.btn{
+  width:100%;
+  padding:10px;
+  border:none;
+  background:#5b5be6;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.btn:hover{
+  background:#4444cc;
+}
+
+/* MESSAGE */
+.msg{
+  margin-top:10px;
+  font-size:13px;
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .container{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo">Airtel Devices</div>
+
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="#">Users</a>
+    <a href="devices.html">Devices</a>
+  </div>
+
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<!-- CONTENT -->
+<div class="container">
+
+  <!-- 🔹 ASSET REGISTRATION -->
+  <div class="card">
+    <h2>Asset Registration</h2>
+
+    <div class="field">
+      <label>Serial Number</label>
+      <input type="text" id="serial" placeholder="Scan or type serial number">
+    </div>
+
+    <div class="field">
+      <label>Device Name</label>
+      <input type="text" id="name" placeholder="e.g. Dell XPS 13">
+    </div>
+
+    <div class="field">
+      <label>Specifications</label>
+      <input type="text" id="specs" placeholder="RAM, CPU, Storage">
+    </div>
+
+    <button class="btn" onclick="registerDevice()">Register Device</button>
+
+    <div class="msg" id="reg-msg"></div>
+  </div>
+
+  <!-- 🔹 DEVICE ASSIGNMENT -->
+  <div class="card">
+    <h2>Assign Device</h2>
+
+    <div class="field">
+      <label>Select Device</label>
+      <select id="device-select"></select>
+    </div>
+
+    <div class="field">
+      <label>Employee ID</label>
+      <input type="number" id="employeeId" placeholder="Enter employee ID">
+    </div>
+
+    <button class="btn" onclick="assignDevice()">Assign</button>
+
+    <div class="msg" id="assign-msg"></div>
+  </div>
+
+</div>
+
+<script>
+// 🔐 PROTECT PAGE
+const user = localStorage.getItem("user");
+if(!user){
+  window.location.href = "login.html";
+}
+
+// 🚪 LOGOUT
+function logout(){
+  localStorage.removeItem("user");
+  window.location.href = "login.html";
+}
+
+// 📦 REGISTER DEVICE
+async function registerDevice(){
+  const serial = document.getElementById("serial").value;
+  const name = document.getElementById("name").value;
+  const specs = document.getElementById("specs").value;
+
+  if(!serial || !name){
+    document.getElementById("reg-msg").innerText = "Fill all fields";
+    return;
+  }
+
+  try{
+    await fetch("http://localhost:8080/api/devices",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({serialNumber:serial, name, specs})
+    });
+
+    document.getElementById("reg-msg").innerText = "Device registered ✔";
+    loadDevices();
+
+  }catch{
+    document.getElementById("reg-msg").innerText = "Error registering device";
+  }
+}
+
+// 📥 LOAD DEVICES INTO SELECT
+async function loadDevices(){
+  try{
+    const res = await fetch("http://localhost:8080/api/devices");
+    const data = await res.json();
+
+    const select = document.getElementById("device-select");
+    select.innerHTML = "";
+
+    data.forEach(d=>{
+      const option = document.createElement("option");
+      option.value = d.id;
+      option.textContent = d.name + " (" + d.serialNumber + ")";
+      select.appendChild(option);
+    });
+
+  }catch{
+    console.log("Error loading devices");
+  }
+}
+
+loadDevices();
+
+// 🔗 ASSIGN DEVICE
+async function assignDevice(){
+  const deviceId = document.getElementById("device-select").value;
+  const employeeId = document.getElementById("employeeId").value;
+
+  if(!deviceId || !employeeId){
+    document.getElementById("assign-msg").innerText = "Fill all fields";
+    return;
+  }
+
+  try{
+    await fetch(`http://localhost:8080/api/devices/${deviceId}/assign/${employeeId}`,{
+      method:"POST"
+    });
+
+    document.getElementById("assign-msg").innerText = "Device assigned ✔";
+
+  }catch{
+    document.getElementById("assign-msg").innerText = "Error assigning device";
+  }
+}
+</script>
+
+</body>
+</html>
