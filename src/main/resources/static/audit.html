@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit History</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#f4f7fb}
+
+/* NAVBAR */
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  padding:15px 30px;
+  background:white;
+  flex-wrap:wrap;
+}
+
+.nav-links a{
+  margin:0 10px;
+  text-decoration:none;
+  color:#555;
+}
+
+/* CONTAINER */
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:30px 20px;
+}
+
+/* SELECT */
+.select-box{margin-bottom:20px}
+
+select{
+  width:100%;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+/* TIMELINE */
+.timeline{
+  position:relative;
+  margin-top:20px;
+}
+
+.timeline::before{
+  content:'';
+  position:absolute;
+  left:20px;
+  width:4px;
+  height:100%;
+  background:#5b5be6;
+}
+
+.timeline-item{
+  position:relative;
+  margin-bottom:20px;
+  padding-left:50px;
+}
+
+.timeline-item::before{
+  content:'';
+  position:absolute;
+  left:12px;
+  top:5px;
+  width:16px;
+  height:16px;
+  background:#5b5be6;
+  border-radius:50%;
+}
+
+/* CARD */
+.card{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+}
+
+.date{
+  font-size:12px;
+  color:#999;
+}
+
+.status{
+  margin-top:5px;
+  font-weight:bold;
+}
+
+.assigned{color:green}
+.returned{color:orange}
+.updated{color:#5b5be6}
+
+/* MOBILE */
+@media(max-width:600px){
+  .timeline::before{left:10px}
+  .timeline-item{padding-left:40px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <div><b>Airtel Inventory</b></div>
+
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="devices.html">Devices</a>
+    <a href="employees.html">Employees</a>
+    <a href="assignment.html">Assignment</a>
+    <a href="audit.html">Audit</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <h2>Device Audit History</h2>
+
+  <!-- SELECT DEVICE -->
+  <div class="select-box">
+    <select id="deviceSelect"></select>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="timeline" id="timeline"></div>
+
+</div>
+
+<script>
+// LOAD DEVICES
+async function loadDevices(){
+  const select = document.getElementById("deviceSelect");
+  select.innerHTML = "<option>Loading...</option>";
+
+  try{
+    const res = await fetch("http://localhost:8080/api/devices");
+    const devices = await res.json();
+
+    select.innerHTML = "<option value=''>Select Device</option>";
+
+    devices.forEach(d=>{
+      select.innerHTML += `
+        <option value="${d.deviceId}">
+          ${d.deviceName}
+        </option>`;
+    });
+
+  }catch{
+    select.innerHTML = "<option>Error loading devices</option>";
+  }
+}
+
+// LOAD TIMELINE (✅ FIXED TO USE AUDIT API)
+async function loadTimeline(deviceId){
+  const timeline = document.getElementById("timeline");
+
+  if(!deviceId){
+    timeline.innerHTML = "";
+    return;
+  }
+
+  try{
+    const res = await fetch(`http://localhost:8080/api/audit/device/${deviceId}`);
+    const data = await res.json();
+
+    // sort newest first
+    data.sort((a,b)=> new Date(b.actionDate) - new Date(a.actionDate));
+
+    timeline.innerHTML = "";
+
+    if(data.length === 0){
+      timeline.innerHTML = "<p>No history found</p>";
+      return;
+    }
+
+    data.forEach(a=>{
+      let statusClass = "updated";
+
+      if(a.action.toLowerCase().includes("assigned")) statusClass = "assigned";
+      if(a.action.toLowerCase().includes("returned")) statusClass = "returned";
+
+      timeline.innerHTML += `
+        <div class="timeline-item">
+          <div class="card">
+            <div class="date">
+              ${new Date(a.actionDate).toLocaleString()}
+            </div>
+
+            <div class="status ${statusClass}">
+              ${a.action}
+            </div>
+
+            <div>
+              ${a.employee?.firstName || ""} ${a.employee?.lastName || ""}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+  }catch{
+    timeline.innerHTML = "<p style='color:red'>Error loading history</p>";
+  }
+}
+
+// EVENT
+document.getElementById("deviceSelect").addEventListener("change", function(){
+  loadTimeline(this.value);
+});
+
+// INIT
+loadDevices();
+</script>
+
+</body>
+</html>
