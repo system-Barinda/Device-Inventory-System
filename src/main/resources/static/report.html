@@ -3,87 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>System Report</title>
+<title>System Report - Airtel Inventory</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif}
 body{background:#f4f7fb}
 
-/* CONTAINER */
 .report{
-  max-width:900px;
+  max-width:950px;
   margin:40px auto;
   background:white;
-  padding:30px;
-  border-radius:10px;
-  box-shadow:0 10px 20px rgba(0,0,0,0.05);
+  padding:40px;
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.08);
 }
 
-/* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  border-bottom: 2px solid #f4f7fb;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
 }
 
-.title h1{
-  font-size:38px;
-  color:#2c7da0;
-}
+.title h1{ font-size:32px; color:#185FA5; letter-spacing: 1px; }
+.title h2{ font-size:18px; color: #555; text-align: right; }
 
-.title h2{
-  font-size:20px;
-}
+.actions{ margin-top:20px; display:flex; gap:12px; }
 
-/* BUTTONS */
-.actions{
-  margin-top:20px;
-  display:flex;
-  gap:10px;
-}
-
-button{
-  padding:10px 15px;
+button.btn-action{
+  padding:10px 20px;
   border:none;
   border-radius:6px;
   cursor:pointer;
+  font-weight: bold;
+  transition: opacity 0.2s;
 }
+
+button.btn-action:hover{ opacity: 0.8; }
 
 .print{background:#333;color:white}
 .pdf{background:#e74c3c;color:white}
 .excel{background:#27ae60;color:white}
 
-/* TABLE */
-table{
-  width:100%;
-  margin-top:25px;
-  border-collapse:collapse;
-}
+table{ width:100%; margin-top:25px; border-collapse:collapse; }
+th, td{ padding:12px; border-bottom:1px solid #eee; text-align: left; }
+th{background:#f8f9fa; color: #333;}
 
-th, td{
-  padding:10px;
-  border-bottom:1px solid #ddd;
-}
+.assigned{color:#27ae60; font-weight: bold;}
+.returned{color:#f39c12; font-weight: bold;}
+.updated{color:#3498db; font-weight: bold;}
 
-th{background:#f1f1f1}
+.footer{ margin-top:30px; text-align:right; font-size:12px; color:#aaa; }
 
-/* STATUS COLORS */
-.assigned{color:green}
-.returned{color:orange}
-.updated{color:blue}
-
-/* FOOTER */
-.footer{
-  margin-top:20px;
-  text-align:right;
-  font-size:12px;
-  color:#999;
-}
-
-/* PRINT */
 @media print{
-  .actions, #navbar-container{display:none}
+  .actions, #navbar-container, button{display:none !important}
+  .report{box-shadow: none; margin: 0; width: 100%; max-width: 100%;}
   body{background:white}
 }
 </style>
@@ -91,15 +67,13 @@ th{background:#f1f1f1}
 
 <body>
 
-<!-- ✅ LOAD NAVBAR -->
 <div id="navbar-container"></div>
 
 <div class="report" id="reportContent">
-
   <div class="header">
     <div>
-      <b>COMPANY</b><br>
-      Airtel Device System
+      <b style="color: #e11919; font-size: 20px;">Airtel</b><br>
+      <span style="color: #666;">Inventory Management System</span>
     </div>
     <div class="title">
       <h1>DAILY</h1>
@@ -107,138 +81,165 @@ th{background:#f1f1f1}
     </div>
   </div>
 
-  <p style="margin-top:10px;color:#555">
-    This report shows all system activities including assignments, returns and updates.
+  <p style="color:#666; font-size: 14px;">
+    Comprehensive log of device movements including assignments, returns, and system audits.
   </p>
 
   <div class="actions">
-    <button class="print" onclick="window.print()">Print</button>
-    <button class="pdf" onclick="downloadPDF()">Download PDF</button>
-    <button class="excel" onclick="downloadExcel()">Download Excel</button>
+    <button class="btn-action print" onclick="window.print()">Print Report</button>
+    <button class="btn-action pdf" onclick="downloadPDF()">Export PDF</button>
+    <button class="btn-action excel" onclick="downloadExcel()">Export CSV</button>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th>Date</th>
-        <th>Device</th>
-        <th>Employee</th>
-        <th>Action</th>
+        <th>Timestamp</th>
+        <th>Device Name</th>
+        <th>Employee / User</th>
+        <th>Action Performed</th>
       </tr>
     </thead>
-    <tbody id="reportTable"></tbody>
+    <tbody id="reportTable">
+        <tr><td colspan="4">Fetching latest logs...</td></tr>
+    </tbody>
   </table>
 
   <div class="footer">
-    Generated on: <span id="dateNow"></span>
+    Report generated on: <span id="dateNow"></span>
   </div>
-
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
 
 <script>
-// ✅ LOAD NAVBAR
+/**
+ * 1. AUTH & NAVBAR
+ */
+if(!localStorage.getItem("user")){
+  window.location.replace("login.html");
+}
+
 async function loadNavbar(){
-  const res = await fetch("navbar.html");
-  const data = await res.text();
-  document.getElementById("navbar-container").innerHTML = data;
-}
-loadNavbar();
+  try {
+    const res = await fetch("navbar.html");
+    const data = await res.text();
+    const container = document.getElementById("navbar-container");
+    container.innerHTML = data;
 
-// ✅ SET DATE
-document.getElementById("dateNow").innerText =
-  new Date().toLocaleString();
+    window.handleLogout = async function() {
+      try { await fetch("http://localhost:8080/api/auth/logout", { method: "POST" }); } catch (e) {}
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.replace("login.html");
+    };
 
-// ✅ LOAD AUDIT DATA
-async function loadReport(){
-  const table = document.getElementById("reportTable");
-
-  try{
-    const res = await fetch("http://localhost:8080/api/audit");
-    const data = await res.json();
-
-    if(data.length === 0){
-      table.innerHTML = "<tr><td colspan='4'>No activity found</td></tr>";
-      return;
-    }
-
-    table.innerHTML = "";
-
-    data.forEach(a=>{
-      let cls = "updated";
-
-      if(a.action.toLowerCase().includes("assign")) cls = "assigned";
-      if(a.action.toLowerCase().includes("return")) cls = "returned";
-
-      table.innerHTML += `
-        <tr>
-          <td>${formatDate(a.actionDate)}</td>
-          <td>${a.device?.deviceName || "-"}</td>
-          <td>${a.employee?.firstName || ""} ${a.employee?.lastName || ""}</td>
-          <td class="${cls}">${a.action}</td>
-        </tr>
-      `;
+    const scripts = container.querySelectorAll("script");
+    scripts.forEach(oldScript => {
+        const newScript = document.createElement("script");
+        newScript.text = oldScript.text;
+        document.head.appendChild(newScript).parentNode.removeChild(newScript);
     });
-
-  }catch{
-    table.innerHTML = "<tr><td colspan='4'>Error loading report</td></tr>";
-  }
+  } catch (e) { console.error("Navbar fail"); }
 }
 
-// FORMAT DATE
-function formatDate(date){
-  return new Date(date).toLocaleString();
-}
+/**
+ * 2. REPORT DATA
+ */
+document.getElementById("dateNow").innerText = new Date().toLocaleString();
 
-// PDF
+async function loadReport(){
+	  const table = document.getElementById("reportTable");
+
+	  try {
+	    // 1. Added 'credentials: "include"' to pass your session/cookies to the backend
+	    const res = await fetch("http://localhost:8080/api/audit", {
+	      method: "GET",
+	      headers: {
+	        "Accept": "application/json",
+	        "Content-Type": "application/json"
+	      }
+	    });
+	    
+	    // 2. Check if we got redirected to login (which would not be JSON)
+	    const contentType = res.headers.get("content-type");
+	    if (!contentType || !contentType.includes("application/json")) {
+	        throw new Error("The server didn't return JSON. You might need to log in again.");
+	    }
+
+	    const data = await res.json();
+	    // ... rest of your code to populate the table ...
+	    
+	  } catch(e) {
+	    console.error("Detailed Error:", e);
+	    table.innerHTML = `<tr><td colspan='4' style='color:red; text-align:center;'>
+	        ${e.message === "The server didn't return JSON. You might need to log in again." 
+	          ? "Session expired. Please log out and log back in." 
+	          : "Error connecting to API. Ensure Spring Boot is running."}
+	    </td></tr>`;
+	  }
+	}
+
+/**
+ * 3. EXPORTS
+ */
 function downloadPDF(){
+  // Check if library loaded correctly
+  if (!window.jspdf) {
+      alert("PDF Library is still loading or failed to load. Please check your internet connection.");
+      return;
+  }
+  
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
+  
+  doc.setFontSize(18);
+  doc.text("Airtel Device System - Activity Report", 14, 20);
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
 
-  doc.text("Daily Activity Report", 20, 20);
-
-  let y = 30;
+  let y = 40;
+  doc.setFontSize(9);
+  
+  doc.text("Timestamp | Device | User | Action", 14, y);
+  doc.line(14, y+2, 190, y+2);
+  y += 10;
 
   document.querySelectorAll("#reportTable tr").forEach(row=>{
     const cols = row.querySelectorAll("td");
-
-    let text = "";
-    cols.forEach(col=>{
-      text += col.innerText + " | ";
-    });
-
-    doc.text(text, 20, y);
-    y += 10;
+    if(cols.length > 1) {
+        let line = `${cols[0].innerText.substring(0,10)} | ${cols[1].innerText} | ${cols[2].innerText} | ${cols[3].innerText}`;
+        doc.text(line, 14, y);
+        y += 8;
+        if(y > 280) { doc.addPage(); y = 20; }
+    }
   });
 
-  doc.save("Activity_Report.pdf");
+  doc.save("Airtel_Activity_Report.pdf");
 }
 
-// EXCEL
 function downloadExcel(){
-  let csv = "Date,Device,Employee,Action\n";
+  let csv = "Date/Time,Device,Employee/User,Action\n";
 
   document.querySelectorAll("#reportTable tr").forEach(row=>{
     const cols = row.querySelectorAll("td");
-
-    let rowData = [];
-    cols.forEach(col=>{
-      rowData.push(col.innerText);
-    });
-
-    csv += rowData.join(",") + "\n";
+    if(cols.length > 1) {
+        let rowData = Array.from(cols).map(c => `"${c.innerText.replace(/"/g, '""')}"`);
+        csv += rowData.join(",") + "\n";
+    }
   });
 
-  const blob = new Blob([csv], { type: "text/csv" });
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
-
   link.href = URL.createObjectURL(blob);
-  link.download = "Activity_Report.csv";
+  link.setAttribute("download", "Airtel_Inventory_Report.csv");
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
 }
 
-// INIT
+// Initial Load
+loadNavbar();
 loadReport();
 </script>
 

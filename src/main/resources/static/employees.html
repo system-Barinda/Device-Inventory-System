@@ -6,7 +6,7 @@
 <title>Employees - Airtel Inventory</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif}
 body{background:#f4f7fb}
 
 /* CONTAINER */
@@ -16,29 +16,35 @@ body{background:#f4f7fb}
 .top-btn{
   background:#5b5be6;
   color:white;
-  padding:10px 15px;
+  padding:10px 18px;
   border:none;
   border-radius:6px;
   cursor:pointer;
   margin-bottom:20px;
+  font-weight: bold;
 }
+.top-btn:hover{background:#4444cc}
 
 /* CARD */
 .card{
   background:white;
-  padding:20px;
+  padding:25px;
   border-radius:10px;
   box-shadow:0 10px 20px rgba(0,0,0,0.05);
-  margin-bottom:20px;
+  margin-bottom:25px;
 }
 
+.card h3 { margin-bottom: 20px; color: #333; }
+
 /* FORM */
-.field{margin-bottom:12px}
+.field{margin-bottom:15px}
+.field label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; }
 .field input{
   width:100%;
-  padding:8px;
+  padding:10px;
   border:1px solid #ccc;
   border-radius:6px;
+  outline-color: #5b5be6;
 }
 
 /* TABLE */
@@ -49,76 +55,80 @@ table{
 }
 
 th, td{
-  padding:10px;
-  border-bottom:1px solid #ddd;
+  padding:12px;
+  border-bottom:1px solid #eee;
   text-align:left;
 }
 
-th{background:#f0f0f0}
+th{background:#f8f9fa; color: #555;}
 
 /* ACTION BUTTONS */
 .action-btn{
-  padding:5px 10px;
+  padding:6px 12px;
   border:none;
   border-radius:5px;
   cursor:pointer;
+  font-size: 13px;
+  margin-right: 5px;
 }
 
 .edit{background:#3498db;color:white}
 .delete{background:#e74c3c;color:white}
 
-.msg{margin-top:10px;font-size:14px}
+.msg{margin-top:15px; font-weight: bold;}
 </style>
 </head>
 
 <body>
 
-<!-- ✅ NAVBAR LOAD -->
 <div id="navbar-container"></div>
 
 <div class="container">
 
-  <!-- ADD BUTTON -->
-  <button class="top-btn" onclick="toggleForm()">+ Add Employee</button>
+  <button class="top-btn" onclick="toggleForm()">+ Add New Employee</button>
 
-  <!-- FORM -->
   <div class="card" id="formCard" style="display:none;">
     <h3 id="formTitle">Add Employee</h3>
 
     <form id="employeeForm">
       <input type="hidden" id="employeeId">
 
-      <div class="field">
-        <input type="text" id="firstName" placeholder="First Name *" required>
+      <div style="display: flex; gap: 15px;">
+        <div class="field" style="flex: 1;">
+          <label>First Name *</label>
+          <input type="text" id="firstName" placeholder="John" required>
+        </div>
+        <div class="field" style="flex: 1;">
+          <label>Last Name</label>
+          <input type="text" id="lastName" placeholder="Doe">
+        </div>
       </div>
 
       <div class="field">
-        <input type="text" id="lastName" placeholder="Last Name">
+        <label>Email Address *</label>
+        <input type="email" id="email" placeholder="john.doe@airtel.com" required>
       </div>
 
       <div class="field">
-        <input type="email" id="email" placeholder="Email *" required>
+        <label>Department</label>
+        <input type="text" id="department" placeholder="e.g. IT, HR, Sales">
       </div>
 
-      <div class="field">
-        <input type="text" id="department" placeholder="Department">
-      </div>
-
-      <button class="top-btn" type="submit">Save</button>
+      <button class="top-btn" type="submit" style="width: 100%; margin-top: 10px;">Save Employee</button>
+      <button type="button" onclick="toggleForm()" style="width: 100%; background: none; border: none; color: #666; cursor: pointer; font-size: 13px;">Cancel</button>
     </form>
 
     <div class="msg" id="msg"></div>
   </div>
 
-  <!-- TABLE -->
   <div class="card">
-    <h3>Employee List</h3>
+    <h3>Employee Directory</h3>
 
     <table>
       <thead>
         <tr>
           <th>ID</th>
-          <th>Name</th>
+          <th>Full Name</th>
           <th>Email</th>
           <th>Department</th>
           <th>Actions</th>
@@ -131,62 +141,88 @@ th{background:#f0f0f0}
 </div>
 
 <script>
-// ✅ LOAD NAVBAR
-async function loadNavbar(){
-  const res = await fetch("navbar.html");
-  const data = await res.text();
-  document.getElementById("navbar-container").innerHTML = data;
-}
-loadNavbar();
-
-// AUTH
+/**
+ * 1. AUTH & NAVBAR
+ */
 if(!localStorage.getItem("user")){
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 }
 
-// LOGOUT
-function logout(){
-  localStorage.removeItem("user");
-  window.location.href = "login.html";
+async function loadNavbar(){
+  try {
+    const res = await fetch("navbar.html");
+    const data = await res.text();
+    const container = document.getElementById("navbar-container");
+    container.innerHTML = data;
+
+    // Global logout definition
+    window.handleLogout = async function() {
+      try { await fetch("/api/auth/logout", { method: "POST" }); } catch (e) {}
+      localStorage.clear();
+      window.location.replace("login.html");
+    };
+
+    // Manual script trigger for injected HTML
+    const scripts = container.querySelectorAll("script");
+    scripts.forEach(oldScript => {
+        const newScript = document.createElement("script");
+        newScript.text = oldScript.text;
+        document.head.appendChild(newScript).parentNode.removeChild(newScript);
+    });
+  } catch (e) { console.error("Navbar failed"); }
 }
 
-// TOGGLE FORM
+/**
+ * 2. EMPLOYEE DATA & UI
+ */
+let allEmployees = []; // Store for easy editing access
+
 function toggleForm(){
   const form = document.getElementById("formCard");
+  const msg = document.getElementById("msg");
+  msg.innerText = "";
   form.style.display = form.style.display === "none" ? "block" : "none";
+  if(form.style.display === "none") {
+    document.getElementById("employeeForm").reset();
+    document.getElementById("employeeId").value = "";
+    document.getElementById("formTitle").innerText = "Add Employee";
+  }
 }
 
-// LOAD EMPLOYEES
 async function loadEmployees(){
-  const res = await fetch("http://localhost:8080/api/employees");
-  const data = await res.json();
+  try {
+    const res = await fetch("/api/employees");
+    allEmployees = await res.json();
 
-  const table = document.getElementById("employeeTable");
-  table.innerHTML = "";
+    const table = document.getElementById("employeeTable");
+    table.innerHTML = "";
 
-  data.forEach(emp=>{
-    table.innerHTML += `
-      <tr>
-        <td>${emp.employeeId}</td>
-        <td>${emp.firstName} ${emp.lastName || ""}</td>
-        <td>${emp.email}</td>
-        <td>${emp.department || ""}</td>
-        <td>
-          <button class="action-btn edit" onclick="editEmployee(${emp.employeeId}, '${emp.firstName}', '${emp.lastName}', '${emp.email}', '${emp.department}')">Edit</button>
-          <button class="action-btn delete" onclick="deleteEmployee(${emp.employeeId})">Delete</button>
-        </td>
-      </tr>
-    `;
-  });
+    allEmployees.forEach((emp, index) => {
+      table.innerHTML += `
+        <tr>
+          <td>${emp.employeeId}</td>
+          <td>${emp.firstName} ${emp.lastName || ""}</td>
+          <td>${emp.email}</td>
+          <td>${emp.department || "General"}</td>
+          <td>
+            <button class="action-btn edit" onclick="editEmployee(${index})">Edit</button>
+            <button class="action-btn delete" onclick="deleteEmployee(${emp.employeeId})">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
+  } catch (e) {
+    document.getElementById("employeeTable").innerHTML = "<tr><td colspan='5'>Error loading data.</td></tr>";
+  }
 }
 
-loadEmployees();
-
-// SAVE / UPDATE
+/**
+ * 3. SAVE / UPDATE
+ */
 document.getElementById("employeeForm").addEventListener("submit", async function(e){
   e.preventDefault();
-
   const id = document.getElementById("employeeId").value;
+  const msg = document.getElementById("msg");
 
   const data = {
     firstName: document.getElementById("firstName").value,
@@ -195,52 +231,68 @@ document.getElementById("employeeForm").addEventListener("submit", async functio
     department: document.getElementById("department").value
   };
 
-  let url = "http://localhost:8080/api/employees";
-  let method = "POST";
+  const url = id ? `/api/employees/${id}` : "/api/employees";
+  const method = id ? "PUT" : "POST";
 
-  if(id){
-    url += "/" + id;
-    method = "PUT";
-  }
+  try {
+    const res = await fetch(url, {
+      method: method,
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(data)
+    });
 
-  const res = await fetch(url,{
-    method: method,
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(data)
-  });
-
-  if(res.ok){
-    document.getElementById("msg").innerText = "✅ Saved";
-    document.getElementById("employeeForm").reset();
-    document.getElementById("employeeId").value = "";
-    loadEmployees();
-  }else{
-    document.getElementById("msg").innerText = "❌ Error";
+    if(res.ok){
+      msg.style.color = "green";
+      msg.innerText = "✅ Employee saved successfully!";
+      setTimeout(() => {
+          toggleForm();
+          loadEmployees();
+      }, 800);
+    } else {
+      msg.style.color = "red";
+      msg.innerText = "❌ Failed to save employee.";
+    }
+  } catch (e) {
+    msg.style.color = "red";
+    msg.innerText = "❌ Server error.";
   }
 });
 
-// EDIT
-function editEmployee(id, firstName, lastName, email, department){
-  toggleForm();
-
-  document.getElementById("formTitle").innerText = "Edit Employee";
-  document.getElementById("employeeId").value = id;
-  document.getElementById("firstName").value = firstName;
-  document.getElementById("lastName").value = lastName || "";
-  document.getElementById("email").value = email;
-  document.getElementById("department").value = department || "";
+/**
+ * 4. EDIT & DELETE
+ */
+function editEmployee(index){
+  const emp = allEmployees[index];
+  
+  // Open and change title
+  document.getElementById("formCard").style.display = "block";
+  document.getElementById("formTitle").innerText = "Edit Employee Details";
+  
+  // Map data to fields
+  document.getElementById("employeeId").value = emp.employeeId;
+  document.getElementById("firstName").value = emp.firstName;
+  document.getElementById("lastName").value = emp.lastName || "";
+  document.getElementById("email").value = emp.email;
+  document.getElementById("department").value = emp.department || "";
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// DELETE
 async function deleteEmployee(id){
-  if(!confirm("Delete this employee?")) return;
+  if(!confirm("Are you sure? Removing an employee might affect device assignment history.")) return;
 
-  await fetch(`http://localhost:8080/api/employees/${id}`,{
-    method:"DELETE"
-  });
-
-  loadEmployees();
+  try {
+    const res = await fetch(`/api/employees/${id}`, { method: "DELETE" });
+    if(res.ok) loadEmployees();
+    else alert("Could not delete. Employee might be linked to active devices.");
+  } catch (e) {
+    alert("Connection error.");
+  }
 }
+
+// Initial Load
+loadNavbar();
+loadEmployees();
 </script>
 
 </body>

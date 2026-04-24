@@ -6,238 +6,311 @@
 <title>Devices - Airtel Inventory</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif}
 body{background:#f4f7fb}
 
 /* CONTAINER */
-.container{padding:40px}
+.container{padding:40px; max-width: 1200px; margin: auto;}
 
-/* BUTTON */
-.add-btn{
-  background:#5b5be6;color:white;border:none;
-  padding:10px 15px;border-radius:6px;
-  margin-bottom:20px;cursor:pointer;
+/* HEADER SECTION */
+.header-flex {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 20px;
 }
+
+/* BUTTONS */
+.add-btn{
+  background:#185FA5; color:white; border:none;
+  padding:12px 20px; border-radius:6px;
+  cursor:pointer; font-weight: bold;
+  transition: background 0.3s;
+}
+.add-btn:hover{background:#124a82}
 
 /* TABLE */
 table{
   width:100%;
   border-collapse:collapse;
   background:white;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  border-radius:12px;
+  overflow:hidden;
 }
 
 th,td{
-  padding:10px;
-  border-bottom:1px solid #ddd;
+  padding:15px;
+  border-bottom:1px solid #eee;
   text-align:left;
 }
 
-th{background:#f1f1f1}
+th{background:#f8f9fa; color:#333; font-size: 14px; text-transform: uppercase;}
 
-/* FORM MODAL */
+/* STATUS BADGES */
+.badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    display: inline-block;
+}
+.status-available { background: #e6fcf5; color: #0ca678; }
+.status-assigned { background: #fff4e6; color: #f76707; }
+.status-maintenance { background: #fff0f0; color: #fa5252; }
+
+/* MODAL */
 .modal{
   display:none;
   position:fixed;
   top:0;left:0;
   width:100%;height:100%;
-  background:rgba(0,0,0,0.5);
+  background:rgba(0,0,0,0.6);
   justify-content:center;
   align-items:center;
+  z-index:2000;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content{
   background:white;
-  padding:20px;
-  border-radius:10px;
-  width:400px;
+  padding:30px;
+  border-radius:15px;
+  width:500px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
-/* FORM */
-.field{margin-bottom:10px}
+.field{margin-bottom:15px}
+.field label{display:block; font-size:13px; margin-bottom:6px; color:#555; font-weight: 600;}
 .field input,.field select{
-  width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;
+  width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size: 14px;
 }
 
-.btn{
-  width:100%;padding:10px;border:none;
-  background:#5b5be6;color:white;border-radius:6px;cursor:pointer;
+.btn-save{
+  width:100%; padding:14px; border:none;
+  background:#185FA5; color:white; border-radius:8px; cursor:pointer;
+  font-weight:bold; font-size: 16px;
 }
 
 .action-btn{
-  margin-right:5px;
-  padding:5px 10px;
-  border:none;
-  border-radius:5px;
-  cursor:pointer;
+  margin-right:5px; padding:8px 12px;
+  border:none; border-radius:6px;
+  cursor:pointer; font-size:12px; font-weight: 600;
 }
-
-.edit{background:#3498db;color:white}
-.delete{background:#e74c3c;color:white}
+.edit{background:#e7f5ff; color:#228be6}
+.delete{background:#fff5f5; color:#fa5252}
 </style>
 </head>
 
 <body>
 
-<!-- ✅ NAVBAR LOAD -->
 <div id="navbar-container"></div>
 
-<!-- CONTENT -->
 <div class="container">
+  <div class="header-flex">
+    <div>
+        <h2>Device Management</h2>
+        <p style="color:#666; font-size: 14px;">Manage corporate hardware assets and status.</p>
+    </div>
+    <button class="add-btn" onclick="openForm()">+ Add New Device</button>
+  </div>
 
-  <button class="add-btn" onclick="openForm()">+ Add Device</button>
-
-  <!-- TABLE -->
   <table>
     <thead>
       <tr>
         <th>ID</th>
-        <th>Name</th>
+        <th>Device Info</th>
         <th>Type</th>
         <th>Serial</th>
         <th>Status</th>
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody id="deviceTable"></tbody>
+    <tbody id="deviceTable">
+        <tr><td colspan="6" style="text-align:center; padding: 30px;">Checking inventory...</td></tr>
+    </tbody>
   </table>
-
 </div>
 
-<!-- MODAL FORM -->
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3 id="formTitle">Add Device</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 id="formTitle">Add Device</h3>
+        <span style="cursor:pointer; font-size:24px;" onclick="closeModal()">&times;</span>
+    </div>
 
     <form id="deviceForm">
       <input type="hidden" id="deviceId">
 
       <div class="field">
-        <input type="text" id="deviceName" placeholder="Device Name" required>
+        <label>Device Name</label>
+        <input type="text" id="deviceName" placeholder="e.g. MacBook Pro" required>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="field">
+            <label>Category</label>
+            <select id="type">
+              <option value="Laptop">Laptop</option>
+              <option value="Phone">Phone</option>
+              <option value="Tablet">Tablet</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Serial Number</label>
+            <input type="text" id="serialNumber" placeholder="SN-XXXXX">
+          </div>
       </div>
 
       <div class="field">
-        <select id="type">
-          <option>Laptop</option>
-          <option>Phone</option>
-        </select>
+        <label>Brand & Model</label>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="brand" placeholder="Brand">
+            <input type="text" id="model" placeholder="Model">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="field">
+            <label>Status</label>
+            <select id="status">
+              <option value="Available">Available</option>
+              <option value="Assigned">Assigned</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Condition</label>
+            <select id="conditionStatus">
+              <option value="New">New</option>
+              <option value="Good">Good</option>
+              <option value="Fair">Fair</option>
+              <option value="Damaged">Damaged</option>
+            </select>
+          </div>
       </div>
 
       <div class="field">
-        <input type="text" id="serialNumber" placeholder="Serial">
-      </div>
-
-      <div class="field">
-        <input type="text" id="brand" placeholder="Brand">
-      </div>
-
-      <div class="field">
-        <input type="text" id="model" placeholder="Model">
-      </div>
-
-      <div class="field">
-        <select id="status">
-          <option>Available</option>
-          <option>Assigned</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <select id="conditionStatus">
-          <option>Good</option>
-          <option>Damaged</option>
-        </select>
-      </div>
-
-      <div class="field">
+        <label>Purchase Date</label>
         <input type="date" id="purchaseDate">
       </div>
 
-      <button class="btn">Save</button>
+      <button type="submit" class="btn-save">Save to Inventory</button>
     </form>
-
   </div>
 </div>
 
 <script>
-// ✅ LOAD NAVBAR
-async function loadNavbar(){
-  const res = await fetch("navbar.html");
-  const data = await res.text();
-  document.getElementById("navbar-container").innerHTML = data;
-}
-loadNavbar();
+/**
+ * CONFIGURATION: Use dynamic host to prevent 401 cross-site cookie blocking
+ */
+const currentHost = window.location.hostname;
+const API_BASE = `http://${currentHost}:8080/api/devices`;
 
-// 🔐 PROTECT
+/**
+ * 1. AUTH & NAVBAR
+ */
 if(!localStorage.getItem("user")){
-  window.location.href="login.html";
+  window.location.replace("login.html");
 }
 
-// LOGOUT
-function logout(){
-  localStorage.removeItem("user");
-  window.location.href="login.html";
+async function loadNavbar(){
+  try {
+    const res = await fetch("navbar.html");
+    const data = await res.text();
+    document.getElementById("navbar-container").innerHTML = data;
+  } catch (e) { console.error("Navbar failed"); }
 }
 
-// OPEN FORM
-function openForm(device=null){
-  document.getElementById("modal").style.display="flex";
+/**
+ * 2. MODAL LOGIC
+ */
+let allDevices = [];
 
-  if(device){
-    document.getElementById("formTitle").innerText="Edit Device";
-    document.getElementById("deviceId").value=device.deviceId;
-    document.getElementById("deviceName").value=device.deviceName;
-    document.getElementById("type").value=device.type;
-    document.getElementById("serialNumber").value=device.serialNumber;
-    document.getElementById("brand").value=device.brand;
-    document.getElementById("model").value=device.model;
-    document.getElementById("status").value=device.status;
-    document.getElementById("conditionStatus").value=device.conditionStatus;
-    document.getElementById("purchaseDate").value=device.purchaseDate;
-  }else{
-    document.getElementById("formTitle").innerText="Add Device";
-    document.getElementById("deviceForm").reset();
+function openForm(index = null){
+  const modal = document.getElementById("modal");
+  const form = document.getElementById("deviceForm");
+  modal.style.display="flex";
+  
+  if(index !== null){
+    const d = allDevices[index];
+    document.getElementById("formTitle").innerText="Update Device";
+    document.getElementById("deviceId").value = d.deviceId;
+    document.getElementById("deviceName").value = d.deviceName;
+    document.getElementById("type").value = d.type;
+    document.getElementById("serialNumber").value = d.serialNumber || "";
+    document.getElementById("brand").value = d.brand || "";
+    document.getElementById("model").value = d.model || "";
+    document.getElementById("status").value = d.status || "Available";
+    document.getElementById("conditionStatus").value = d.conditionStatus || "New";
+    document.getElementById("purchaseDate").value = d.purchaseDate || "";
+  } else {
+    document.getElementById("formTitle").innerText="Add New Device";
+    form.reset();
     document.getElementById("deviceId").value="";
   }
 }
 
-// CLOSE MODAL
-window.onclick = function(e){
-  if(e.target.classList.contains("modal")){
+function closeModal() {
     document.getElementById("modal").style.display="none";
+}
+
+window.onclick = (e) => { if(e.target.id === "modal") closeModal(); }
+
+/**
+ * 3. API CORE
+ */
+async function loadDevices(){
+  const table = document.getElementById("deviceTable");
+  try {
+    const res = await fetch(API_BASE, { 
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        credentials: 'include' 
+    });
+    
+    if(res.status === 401) throw new Error("UNAUTHORIZED");
+
+    allDevices = await res.json();
+    table.innerHTML="";
+
+    if(!allDevices || allDevices.length === 0) {
+        table.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No devices found.</td></tr>";
+        return;
+    }
+
+    allDevices.forEach((d, index) => {
+      const status = d.status || 'Available';
+      const statusClass = `status-${status.toLowerCase()}`;
+      table.innerHTML += `
+        <tr>
+          <td>#${d.deviceId}</td>
+          <td>
+            <b>${d.deviceName}</b><br>
+            <small style="color:#777">${d.brand || ''} ${d.model || ''}</small>
+          </td>
+          <td>${d.type}</td>
+          <td>${d.serialNumber || '---'}</td>
+          <td><span class="badge ${statusClass}">${status}</span></td>
+          <td>
+            <button class="action-btn edit" onclick="openForm(${index})">Edit</button>
+            <button class="action-btn delete" onclick="deleteDevice(${d.deviceId})">Delete</button>
+          </td>
+        </tr>`;
+    });
+  } catch (e) { 
+      console.error("Fetch error:", e);
+      table.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center; padding: 20px;">
+          <b>Session Expired</b><br>
+          <a href="login.html" style="color: #185FA5; text-decoration: underline;">Please Login Again</a>
+      </td></tr>`;
   }
 }
 
-// LOAD DEVICES
-async function loadDevices(){
-  const res = await fetch("http://localhost:8080/api/devices");
-  const data = await res.json();
-
-  const table = document.getElementById("deviceTable");
-  table.innerHTML="";
-
-  data.forEach(d=>{
-    table.innerHTML += `
-      <tr>
-        <td>${d.deviceId}</td>
-        <td>${d.deviceName}</td>
-        <td>${d.type}</td>
-        <td>${d.serialNumber}</td>
-        <td>${d.status}</td>
-        <td>
-          <button class="action-btn edit" onclick='openForm(${JSON.stringify(d)})'>Edit</button>
-          <button class="action-btn delete" onclick="deleteDevice(${d.deviceId})">Delete</button>
-        </td>
-      </tr>
-    `;
-  });
-}
-
-loadDevices();
-
-// SAVE
 document.getElementById("deviceForm").addEventListener("submit", async function(e){
   e.preventDefault();
-
   const id = document.getElementById("deviceId").value;
 
   const data = {
@@ -251,31 +324,42 @@ document.getElementById("deviceForm").addEventListener("submit", async function(
     purchaseDate: document.getElementById("purchaseDate").value
   };
 
-  const url = id 
-    ? `http://localhost:8080/api/devices/${id}`
-    : "http://localhost:8080/api/devices";
-
+  const url = id ? `${API_BASE}/${id}` : API_BASE;
   const method = id ? "PUT" : "POST";
 
-  await fetch(url,{
-    method:method,
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
-  });
+  try {
+    const res = await fetch(url,{
+      method: method,
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(data),
+      credentials: 'include'
+    });
 
-  document.getElementById("modal").style.display="none";
-  loadDevices();
+    if(res.ok) {
+        closeModal();
+        loadDevices();
+    } else {
+        alert("Operation failed. Ensure you are authorized.");
+    }
+  } catch (e) { alert("Network error."); }
 });
 
-// DELETE
 async function deleteDevice(id){
-  if(confirm("Delete this device?")){
-    await fetch(`http://localhost:8080/api/devices/${id}`,{
-      method:"DELETE"
-    });
-    loadDevices();
+  if(confirm("Permanently delete this device?")){
+    try {
+        const res = await fetch(`${API_BASE}/${id}`, { 
+            method: "DELETE", 
+            credentials: 'include' 
+        });
+        if(res.ok) loadDevices();
+        else alert("Delete failed.");
+    } catch(e) { alert("Delete failed."); }
   }
 }
+
+// Init
+loadNavbar();
+loadDevices();
 </script>
 
 </body>

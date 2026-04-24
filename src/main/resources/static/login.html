@@ -9,9 +9,7 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial, sans-serif}
 
 /* BACKGROUND */
-body{
-  background:#f4f7fb;
-}
+body{ background:#f4f7fb; }
 
 /* WRAPPER */
 .wrap{
@@ -166,7 +164,6 @@ body{
 <div class="wrap">
   <div class="card">
 
-    <!-- BRAND -->
     <div class="brand">
       <div class="brand-dot">
         <svg viewBox="0 0 20 20">
@@ -180,48 +177,37 @@ body{
       <div class="brand-sub">Device Management System</div>
     </div>
 
-    <!-- TABS -->
     <div class="tabs">
       <button class="tab active" onclick="switchTab('login',this)">Sign in</button>
       <button class="tab" onclick="switchTab('register',this)">Register</button>
     </div>
 
-    <!-- LOGIN -->
     <div class="form-section active" id="sec-login">
       <div class="field">
         <label>Email</label>
         <input type="email" id="login-email" placeholder="you@airtel.rw">
       </div>
-
       <div class="field">
         <label>Password</label>
         <input type="password" id="login-password" placeholder="Enter password">
       </div>
-
       <button class="btn-submit" onclick="handleLogin()">Sign in</button>
       <div class="msg" id="login-msg"></div>
-
       <div class="divider"><span>or</span></div>
-
       <p style="text-align:center;font-size:12px;color:#666">
-        No account?
-        <span style="color:#185FA5;cursor:pointer" onclick="switchTabByName('register')">Register</span>
+        No account? <span style="color:#185FA5;cursor:pointer" onclick="switchTabByName('register')">Register</span>
       </p>
     </div>
 
-    <!-- REGISTER -->
     <div class="form-section" id="sec-register">
-
       <div class="field">
         <label>Full name</label>
         <input type="text" id="reg-fullname">
       </div>
-
       <div class="field">
         <label>Email</label>
         <input type="email" id="reg-email">
       </div>
-
       <div class="field-row">
         <div class="field">
           <label>Department</label>
@@ -233,7 +219,6 @@ body{
             <option>HR</option>
           </select>
         </div>
-
         <div class="field">
           <label>Role</label>
           <select id="reg-role">
@@ -243,20 +228,16 @@ body{
           </select>
         </div>
       </div>
-
       <div class="field">
         <label>Password</label>
         <input type="password" id="reg-password">
       </div>
-
       <div class="field">
         <label>Confirm password</label>
         <input type="password" id="reg-confirm">
       </div>
-
       <button class="btn-submit" onclick="handleRegister()">Create account</button>
       <div class="msg" id="register-msg"></div>
-
     </div>
   </div>
 </div>
@@ -271,11 +252,8 @@ function switchTab(name, el){
 
 function switchTabByName(name){
   const tabs=document.querySelectorAll('.tab');
-  tabs.forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.form-section').forEach(s=>s.classList.remove('active'));
   const idx=name==='login'?0:1;
-  tabs[idx].classList.add('active');
-  document.getElementById('sec-'+name).classList.add('active');
+  switchTab(name, tabs[idx]);
 }
 
 function showMsg(id,text,type){
@@ -284,73 +262,70 @@ function showMsg(id,text,type){
   el.className='msg '+type;
 }
 
+// FIXED LOGIN LOGIC
 async function handleLogin(){
-	  const email = document.getElementById('login-email').value.trim();
-	  const password = document.getElementById('login-password').value;
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
 
-	  if(!email || !password){
-	    showMsg('login-msg','Fill all fields','error');
-	    return;
-	  }
-
-	  try{
-	    const res = await fetch('http://localhost:8080/api/auth/login',{
-	      method:'POST',
-	      headers:{'Content-Type':'application/json'},
-	      body: JSON.stringify({email, password})
-	    });
-
-	    if(res.ok){
-	      const data = await res.json();
-
-	      // ✅ SAVE SESSION
-	      localStorage.setItem("user", JSON.stringify(data));
-
-	      showMsg('login-msg','Login successful','success');
-
-	      setTimeout(()=>{
-	        window.location.href = "dashboard.html";
-	      },1000);
-
-	    }else{
-	      showMsg('login-msg','Invalid credentials','error');
-	    }
-
-	  }catch{
-	    showMsg('login-msg','Server error','error');
-	  }
-	}
-
-async function handleRegister(){
-  const fullName=document.getElementById('reg-fullname').value.trim();
-  const email=document.getElementById('reg-email').value.trim();
-  const department=document.getElementById('reg-department').value;
-  const role=document.getElementById('reg-role').value;
-  const password=document.getElementById('reg-password').value;
-  const confirm=document.getElementById('reg-confirm').value;
-
-  if(!fullName||!email||!department||!role||!password){
-    showMsg('register-msg','Fill all fields','error');return;
+  if(!email || !password){
+    showMsg('login-msg','Fill all fields','error');
+    return;
   }
 
-  if(password!==confirm){
-    showMsg('register-msg','Passwords mismatch','error');return;
-  }
-
-  try{
-    const res=await fetch('http://localhost:8080/api/auth/register',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({fullName,email,department,role,password})
+  try {
+    const res = await fetch('/api/auth/login', { // Using relative path
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
     });
 
-    if(res.ok){
-      showMsg('register-msg','Account created','success');
-      setTimeout(()=>switchTabByName('login'),1500);
-    }else{
-      showMsg('register-msg','Registration failed','error');
+    const data = await res.json();
+
+    if(res.ok) {
+      localStorage.setItem("user", JSON.stringify(data));
+      showMsg('login-msg','Login successful','success');
+      setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
+    } else {
+      showMsg('login-msg', data.message || 'Invalid credentials','error');
     }
-  }catch{
+  } catch(e) {
+    showMsg('login-msg','Connection failed','error');
+  }
+}
+
+// FIXED REGISTER LOGIC
+async function handleRegister(){
+  const fullName = document.getElementById('reg-fullname').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const department = document.getElementById('reg-department').value;
+  const role = document.getElementById('reg-role').value;
+  const password = document.getElementById('reg-password').value;
+  const confirm = document.getElementById('reg-confirm').value;
+
+  if(!fullName || !email || !department || !role || !password){
+    showMsg('register-msg','Fill all fields','error'); return;
+  }
+  if(password !== confirm){
+    showMsg('register-msg','Passwords mismatch','error'); return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // Mapping to your User.java model fields
+      body: JSON.stringify({ fullName, email, department, role, password })
+    });
+
+    const data = await res.json();
+
+    if(res.ok) {
+      showMsg('register-msg','Account created!','success');
+      setTimeout(() => switchTabByName('login'), 1500);
+    } else {
+      showMsg('register-msg', data.message || 'Registration failed','error');
+    }
+  } catch(e) {
     showMsg('register-msg','Server error','error');
   }
 }

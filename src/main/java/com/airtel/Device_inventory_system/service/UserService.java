@@ -1,12 +1,8 @@
 package com.airtel.Device_inventory_system.service;
 
-
-
 import org.springframework.stereotype.Service;
-
 import com.airtel.Device_inventory_system.model.User;
 import com.airtel.Device_inventory_system.repositor.UserRepository;
-
 import java.util.List;
 
 @Service
@@ -29,5 +25,11 @@ public class UserService {
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    // ADD THIS NEW METHOD:
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElse(null); // Return null if user not found, so the Controller can handle it
     }
 }

@@ -3,33 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Audit History</title>
+<title>Audit History - Airtel Inventory</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif}
 body{background:#f4f7fb}
 
-/* CONTAINER */
 .container{
   max-width:900px;
   margin:auto;
   padding:30px 20px;
 }
 
-/* SELECT */
 .select-box{margin-bottom:20px}
 
 select{
   width:100%;
-  padding:10px;
+  padding:12px;
   border-radius:6px;
   border:1px solid #ccc;
+  font-size: 16px;
+  background: white;
 }
 
-/* TIMELINE */
 .timeline{
   position:relative;
   margin-top:20px;
+  min-height: 200px;
 }
 
 .timeline::before{
@@ -51,14 +51,15 @@ select{
   content:'';
   position:absolute;
   left:12px;
-  top:5px;
-  width:16px;
-  height:16px;
+  top:15px;
+  width:18px;
+  height:18px;
   background:#5b5be6;
   border-radius:50%;
+  border: 3px solid #f4f7fb;
+  z-index: 2;
 }
 
-/* CARD */
 .card{
   background:white;
   padding:15px;
@@ -69,146 +70,180 @@ select{
 .date{
   font-size:12px;
   color:#999;
+  margin-bottom: 5px;
 }
 
 .status{
-  margin-top:5px;
   font-weight:bold;
+  text-transform: uppercase;
+  font-size: 14px;
 }
 
-.assigned{color:green}
-.returned{color:orange}
+.assigned{color:#27ae60}
+.returned{color:#f39c12}
 .updated{color:#5b5be6}
 
-/* MOBILE */
-@media(max-width:600px){
-  .timeline::before{left:10px}
-  .timeline-item{padding-left:40px}
+.error-msg {
+    color: #e74c3c;
+    background: #fdf2f2;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ✅ SHARED NAVBAR -->
 <div id="navbar-container"></div>
 
 <div class="container">
+  <h2 style="margin-bottom: 20px;">Device Audit History</h2>
 
-  <h2>Device Audit History</h2>
-
-  <!-- SELECT DEVICE -->
   <div class="select-box">
-    <select id="deviceSelect"></select>
+    <label style="font-size: 12px; color: #666; display: block; margin-bottom: 5px;">Select an item to track its movement:</label>
+    <select id="deviceSelect">
+        <option value="">Fetching devices...</option>
+    </select>
   </div>
 
-  <!-- TIMELINE -->
   <div class="timeline" id="timeline"></div>
-
 </div>
 
 <script>
-// 🔐 AUTH
+/**
+ * 1. AUTH & NAVBAR
+ */
 if(!localStorage.getItem("user")){
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 }
 
-// ✅ LOAD NAVBAR
 async function loadNavbar(){
-  const res = await fetch("navbar.html");
-  const data = await res.text();
-  document.getElementById("navbar-container").innerHTML = data;
-}
-loadNavbar();
+  try {
+    const res = await fetch("navbar.html");
+    const data = await res.text();
+    const container = document.getElementById("navbar-container");
+    container.innerHTML = data;
 
-// LOGOUT (used by navbar)
-function logout(){
-  localStorage.removeItem("user");
-  window.location.href = "login.html";
+    window.handleLogout = async function() {
+      try { 
+          await fetch("http://localhost:8080/api/auth/logout", { 
+              method: "POST",
+              credentials: 'include' 
+          }); 
+      } catch (e) {}
+      localStorage.clear();
+      window.location.replace("login.html");
+    };
+
+    const scripts = container.querySelectorAll("script");
+    scripts.forEach(oldScript => {
+        const newScript = document.createElement("script");
+        newScript.text = oldScript.text;
+        document.head.appendChild(newScript).parentNode.removeChild(newScript);
+    });
+  } catch(e) { console.error("Navbar error"); }
 }
 
-// LOAD DEVICES
+/**
+ * 2. LOAD DEVICES
+ */
 async function loadDevices(){
   const select = document.getElementById("deviceSelect");
-  select.innerHTML = "<option>Loading...</option>";
 
   try{
-    const res = await fetch("http://localhost:8080/api/devices");
+    // Added credentials: 'include' to pass session cookies
+    const res = await fetch("http://localhost:8080/api/devices", {
+        headers: { "Accept": "application/json" },
+        credentials: 'include'
+    });
+    
+    const contentType = res.headers.get("content-type");
+    if (!res.ok || !contentType || !contentType.includes("application/json")) {
+        throw new Error("Unauthorized");
+    }
+
     const devices = await res.json();
+    select.innerHTML = "<option value=''>-- Choose a Device --</option>";
 
-    select.innerHTML = "<option value=''>Select Device</option>";
-
-    devices.forEach(d=>{
-      select.innerHTML += `
-        <option value="${d.deviceId}">
-          ${d.deviceName}
-        </option>`;
+    devices.forEach(d => {
+      select.innerHTML += `<option value="${d.deviceId}">${d.deviceName} (${d.serialNumber || 'No Serial'})</option>`;
     });
 
-  }catch{
-    select.innerHTML = "<option>Error loading devices</option>";
+  }catch(e){
+    select.innerHTML = "<option>Error: Please log in again</option>";
+    console.error("Device Load Error:", e);
   }
 }
 
-// LOAD TIMELINE
+/**
+ * 3. LOAD TIMELINE
+ */
 async function loadTimeline(deviceId){
   const timeline = document.getElementById("timeline");
+  if(!deviceId){ timeline.innerHTML = ""; return; }
 
-  if(!deviceId){
-    timeline.innerHTML = "";
-    return;
-  }
+  timeline.innerHTML = "<p style='text-align:center; padding: 20px;'>Loading history...</p>";
 
   try{
-    const res = await fetch(`http://localhost:8080/api/audit/device/${deviceId}`);
-    const data = await res.json();
+    const res = await fetch(`http://localhost:8080/api/audit/device/${deviceId}`, {
+        headers: { "Accept": "application/json" },
+        credentials: 'include'
+    });
+    
+    const contentType = res.headers.get("content-type");
+    if (!res.ok || !contentType || !contentType.includes("application/json")) {
+        throw new Error("Session Expired");
+    }
 
-    // sort newest first
+    const data = await res.json();
     data.sort((a,b)=> new Date(b.actionDate) - new Date(a.actionDate));
 
     timeline.innerHTML = "";
 
     if(data.length === 0){
-      timeline.innerHTML = "<p>No history found</p>";
+      timeline.innerHTML = "<div class='card' style='text-align:center;'>No history found for this device.</div>";
       return;
     }
 
-    data.forEach(a=>{
+    data.forEach(a => {
       let statusClass = "updated";
+      const actionText = a.action ? a.action.toLowerCase() : "";
+      if(actionText.includes("assign")) statusClass = "assigned";
+      if(actionText.includes("return")) statusClass = "returned";
 
-      if(a.action.toLowerCase().includes("assigned")) statusClass = "assigned";
-      if(a.action.toLowerCase().includes("returned")) statusClass = "returned";
+      // Fixed: firstName and lastName are properties of the employee object
+      const user = a.employee ? `${a.employee.firstName} ${a.employee.lastName || ""}` : "System Admin";
 
       timeline.innerHTML += `
         <div class="timeline-item">
           <div class="card">
-            <div class="date">
-              ${new Date(a.actionDate).toLocaleString()}
-            </div>
-
-            <div class="status ${statusClass}">
-              ${a.action}
-            </div>
-
-            <div>
-              ${a.employee?.firstName || ""} ${a.employee?.lastName || ""}
+            <div class="date">${new Date(a.actionDate).toLocaleString()}</div>
+            <div class="status ${statusClass}">${a.action}</div>
+            <div style="font-size:14px; color:#444; margin-top:8px; border-top: 1px solid #eee; padding-top: 5px;">
+              <b>Performed by:</b> ${user}
             </div>
           </div>
         </div>
       `;
     });
 
-  }catch{
-    timeline.innerHTML = "<p style='color:red'>Error loading history</p>";
+  } catch(e) {
+    timeline.innerHTML = `<div class='error-msg'>
+        <b>Connection Error</b><br>
+        Your session may have expired. 
+        Please try logging out and back in.
+    </div>`;
   }
 }
 
-// EVENT
+// Listeners
 document.getElementById("deviceSelect").addEventListener("change", function(){
   loadTimeline(this.value);
 });
 
-// INIT
+// Init
+loadNavbar();
 loadDevices();
 </script>
 

@@ -11,7 +11,11 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/devices")
-@CrossOrigin(origins = "*") // ✅ allow frontend (important)
+/**
+ * ✅ FIX: You cannot use "*" with allowCredentials = "true".
+ * Change the origin to match your frontend URL (e.g., your VS Code Live Server address).
+ */
+@CrossOrigin(origins = "http://127.0.0.1:5500", allowCredentials = "true") 
 public class DeviceController {
 
     private final DeviceService deviceService;
@@ -20,14 +24,11 @@ public class DeviceController {
         this.deviceService = deviceService;
     }
 
-    // ✅ ADD DEVICE (FIXED)
+    // ✅ ADD DEVICE
     @PostMapping
     public ResponseEntity<?> addDevice(@RequestBody Device device) {
-
-        // 🔍 DEBUG (see what frontend sends)
         System.out.println("Incoming Device: " + device);
 
-        // ❌ VALIDATION
         if (device.getDeviceName() == null || device.getDeviceName().isEmpty()) {
             return ResponseEntity.badRequest().body("Device name is required");
         }
@@ -52,10 +53,9 @@ public class DeviceController {
         return ResponseEntity.ok(deviceService.getAvailableDevices());
     }
 
-    // ✅ GET DEVICE BY ID (SAFE)
+    // ✅ GET DEVICE BY ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getDevice(@PathVariable Long id) {
-
         Optional<Device> device = deviceService.getDeviceById(id);
 
         if (device.isPresent()) {

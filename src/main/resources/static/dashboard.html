@@ -15,7 +15,6 @@ body{
   min-height:100vh;
 }
 
-
 /* HERO */
 .hero{
   display:flex;
@@ -97,10 +96,8 @@ body{
 
 <body>
 
-<!-- 🔥 NAVBAR LOAD HERE -->
 <div id="navbar-container"></div>
 
-<!-- HERO -->
 <div class="hero">
   <div class="hero-text">
     <div class="badge">Dashboard</div>
@@ -117,7 +114,6 @@ body{
   </div>
 </div>
 
-<!-- STATS -->
 <div class="cards">
   <div class="card">
     <h4>Total Users</h4>
@@ -137,77 +133,88 @@ body{
   </div>
 </div>
 
-<!-- FOOTER -->
 <div id="footer-container"></div>
 
 <script>
-// ✅ AUTH CHECK
-const user = localStorage.getItem("user");
-
-if(!user){
+/** * 1. AUTH CHECK 
+ * We check this immediately before the page even finishes loading
+ */
+const userStr = localStorage.getItem("user");
+if(!userStr){
   window.location.href = "login.html";
 }
 
-// ✅ USER NAME
-const userData = JSON.parse(user);
-document.getElementById("welcome-user").innerText =
-  "Welcome " + userData.fullName;
+// Display user name safely
+const userData = JSON.parse(userStr);
+document.getElementById("welcome-user").innerText = "Welcome " + (userData.fullName || "User");
 
-// ✅ LOAD NAVBAR
-async function loadNavbar(){
-  const res = await fetch("navbar.html");
-  const data = await res.text();
-  document.getElementById("navbar-container").innerHTML = data;
-}
-loadNavbar();
+/**
+ * 2. API CALLS
+ * We use relative paths now since your SecurityConfig permits them
+ */
 
-// ✅ LOAD USERS
 async function loadUsers(){
   try{
-    const res = await fetch("http://localhost:8080/api/users");
-    const data = await res.json();
-    document.getElementById("users-count").innerText = data.length;
-  }catch{
-    console.log("Error loading users");
+    // Changed to match your UserController @RequestMapping
+    const res = await fetch("/api/auth/users"); 
+    if(res.ok){
+        const data = await res.json();
+        document.getElementById("users-count").innerText = data.length;
+    }
+  } catch(e) {
+    console.error("Error loading users", e);
   }
 }
 
-// ✅ LOAD DEVICES
 async function loadDevices(){
   try{
-    const res = await fetch("http://localhost:8080/api/devices");
-    const data = await res.json();
-
-    document.getElementById("devices-count").innerText = data.length;
-
-    const active = data.filter(d => d.status === "Assigned");
-    document.getElementById("active-count").innerText = active.length;
-
-  }catch{
-    console.log("Error loading devices");
+    // Ensure this matches your DeviceController path
+    const res = await fetch("/api/devices"); 
+    if(res.ok){
+        const data = await res.json();
+        document.getElementById("devices-count").innerText = data.length;
+        
+        // Count devices that are actually in use
+        const active = data.filter(d => d.status === "Assigned" || d.status === "Active");
+        document.getElementById("active-count").innerText = active.length;
+    }
+  } catch(e) {
+    console.error("Error loading devices", e);
   }
 }
 
+// 3. UI COMPONENT LOADERS
+async function loadNavbar(){
+  try {
+    const res = await fetch("navbar.html");
+    if(res.ok) {
+        const data = await res.text();
+        document.getElementById("navbar-container").innerHTML = data;
+    }
+  } catch(e) {}
+}
+
+async function loadFooter(){
+  try{
+    const res = await fetch("footer.html");
+    if(res.ok) {
+        const data = await res.text();
+        document.getElementById("footer-container").innerHTML = data;
+    }
+  } catch(e) {}
+}
+
+// Initializing page
+loadNavbar();
+loadFooter();
 loadUsers();
 loadDevices();
 
-// ✅ LOGOUT
+// 4. LOGOUT FUNCTION
 function logout(){
   localStorage.removeItem("user");
   window.location.href = "login.html";
 }
-
-// ✅ FOOTER
-async function loadFooter(){
-  try{
-    const res = await fetch("footer.html");
-    const data = await res.text();
-    document.getElementById("footer-container").innerHTML = data;
-  }catch{
-    console.log("Footer not loaded");
-  }
-}
-loadFooter();
 </script>
 
 </body>
