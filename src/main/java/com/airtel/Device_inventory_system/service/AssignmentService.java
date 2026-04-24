@@ -1,91 +1,54 @@
 package com.airtel.Device_inventory_system.service;
 
-
-
 import org.springframework.stereotype.Service;
-import com.airtel.Device_inventory_system.model.Assignment;
-import com.airtel.Device_inventory_system.model.AuditHistory;
-import com.airtel.Device_inventory_system.model.Device;
-import com.airtel.Device_inventory_system.model.User;
-import com.airtel.Device_inventory_system.repositor.AssignmentRepository;
-import com.airtel.Device_inventory_system.repositor.AuditRepository;
-import com.airtel.Device_inventory_system.repositor.DeviceRepository;
-import com.airtel.Device_inventory_system.repositor.UserRepository;
-
 import java.time.LocalDate;
+
+import com.airtel.Device_inventory_system.model.*;
+import com.airtel.Device_inventory_system.repositor.AssignmentRepository;
+import com.airtel.Device_inventory_system.repositor.DeviceRepository;
+import com.airtel.Device_inventory_system.repositor.EmployeeRepository;
+
 
 @Service
 public class AssignmentService {
+
     private final AssignmentRepository assignmentRepository;
     private final DeviceRepository deviceRepository;
-    private final UserRepository userRepository;
-    private final AuditRepository auditRepository;
+    private final EmployeeRepository employeeRepository;
 
-    public AssignmentService(
-            AssignmentRepository assignmentRepository,
-            DeviceRepository deviceRepository,
-            UserRepository userRepository,
-            AuditRepository auditRepository) {
+    public AssignmentService(AssignmentRepository assignmentRepository,
+                             DeviceRepository deviceRepository,
+                             EmployeeRepository employeeRepository) {
         this.assignmentRepository = assignmentRepository;
         this.deviceRepository = deviceRepository;
-        this.userRepository = userRepository;
-        this.auditRepository = auditRepository;
+        this.employeeRepository = employeeRepository;
     }
 
-    // ASSIGN DEVICE
-    public Assignment assignDevice(Long deviceId, Long userId) {
+    public Assignment assignDevice(Long deviceId, Long employeeId) {
+
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new RuntimeException("Device not found"));
 
-        if (!device.getStatus().equals("available")) {
-            throw new RuntimeException("Device is not available");
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        // 🚨 prevent double assignment
+        if("Assigned".equalsIgnoreCase(device.getStatus())){
+            throw new RuntimeException("Device already assigned");
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+        // ✅ create assignment
         Assignment assignment = new Assignment();
         assignment.setDevice(device);
-        assignment.setUser(user);
+        assignment.setEmployee(employee);
         assignment.setAssignedDate(LocalDate.now());
-        assignment.setStatus("assigned");
+        assignment.setStatus("Active");
 
-        device.setStatus("assigned");
+        // ✅ update device status
+        device.setStatus("Assigned");
+
         deviceRepository.save(device);
 
-        Assignment savedAssignment = assignmentRepository.save(assignment);
-
-        // SAVE AUDIT ✅ Fixed
-        AuditHistory audit = new AuditHistory();
-        audit.setDevice(device);
-        audit.setUser(user);
-        audit.setAction("assigned");
-        auditRepository.save(audit);
-
-        return savedAssignment;
-    }
-
-    // RETURN DEVICE
-    public Assignment returnDevice(Long assignmentId) {
-        Assignment assignment = assignmentRepository.findById(assignmentId)
-                .orElseThrow(() -> new RuntimeException("Assignment not found"));
-
-        assignment.setReturnDate(LocalDate.now());
-        assignment.setStatus("returned");
-
-        Device device = assignment.getDevice();
-        device.setStatus("available");
-        deviceRepository.save(device);
-
-        Assignment updated = assignmentRepository.save(assignment);
-
-        // SAVE AUDIT ✅ Already correct
-        AuditHistory audit = new AuditHistory();
-        audit.setDevice(device);
-        audit.setUser(assignment.getUser());
-        audit.setAction("returned");
-        auditRepository.save(audit);
-
-        return updated;
+        return assignmentRepository.save(assignment);
     }
 }

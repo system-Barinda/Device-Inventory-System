@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employees - Airtel Inventory</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#f4f7fb}
+
+/* NAVBAR */
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 40px;
+  background:white;
+}
+
+.logo{font-weight:bold}
+.nav-links a{margin:0 10px;text-decoration:none;color:#555}
+
+.logout{
+  background:#e74c3c;color:white;border:none;
+  padding:8px 12px;border-radius:6px;cursor:pointer;
+}
+
+/* CONTAINER */
+.container{padding:40px}
+
+/* BUTTON */
+.top-btn{
+  background:#5b5be6;
+  color:white;
+  padding:10px 15px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin-bottom:20px;
+}
+
+/* CARD */
+.card{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.05);
+  margin-bottom:20px;
+}
+
+/* FORM */
+.field{margin-bottom:12px}
+.field input{
+  width:100%;
+  padding:8px;
+  border:1px solid #ccc;
+  border-radius:6px;
+}
+
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+}
+
+th, td{
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+
+th{background:#f0f0f0}
+
+/* ACTION BUTTONS */
+.action-btn{
+  padding:5px 10px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.edit{background:#3498db;color:white}
+.delete{background:#e74c3c;color:white}
+
+.msg{margin-top:10px;font-size:14px}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo">Airtel Inventory</div>
+
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="devices.html">Devices</a>
+    <a href="employees.html">Employees</a>
+  </div>
+
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+  <!-- ADD BUTTON -->
+  <button class="top-btn" onclick="toggleForm()">+ Add Employee</button>
+
+  <!-- FORM -->
+  <div class="card" id="formCard" style="display:none;">
+    <h3 id="formTitle">Add Employee</h3>
+
+    <form id="employeeForm">
+      <input type="hidden" id="employeeId">
+
+      <div class="field">
+        <input type="text" id="firstName" placeholder="First Name *" required>
+      </div>
+
+      <div class="field">
+        <input type="text" id="lastName" placeholder="Last Name">
+      </div>
+
+      <div class="field">
+        <input type="email" id="email" placeholder="Email *" required>
+      </div>
+
+      <div class="field">
+        <input type="text" id="department" placeholder="Department">
+      </div>
+
+      <button class="top-btn" type="submit">Save</button>
+    </form>
+
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card">
+    <h3>Employee List</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Department</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="employeeTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// AUTH
+if(!localStorage.getItem("user")){
+  window.location.href = "login.html";
+}
+
+// LOGOUT
+function logout(){
+  localStorage.removeItem("user");
+  window.location.href = "login.html";
+}
+
+// TOGGLE FORM
+function toggleForm(){
+  const form = document.getElementById("formCard");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+}
+
+// LOAD EMPLOYEES
+async function loadEmployees(){
+  const res = await fetch("http://localhost:8080/api/employees");
+  const data = await res.json();
+
+  const table = document.getElementById("employeeTable");
+  table.innerHTML = "";
+
+  data.forEach(emp=>{
+    table.innerHTML += `
+      <tr>
+        <td>${emp.employeeId}</td>
+        <td>${emp.firstName} ${emp.lastName || ""}</td>
+        <td>${emp.email}</td>
+        <td>${emp.department || ""}</td>
+        <td>
+          <button class="action-btn edit" onclick="editEmployee(${emp.employeeId}, '${emp.firstName}', '${emp.lastName}', '${emp.email}', '${emp.department}')">Edit</button>
+          <button class="action-btn delete" onclick="deleteEmployee(${emp.employeeId})">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+loadEmployees();
+
+// SAVE / UPDATE
+document.getElementById("employeeForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+
+  const id = document.getElementById("employeeId").value;
+
+  const data = {
+    firstName: document.getElementById("firstName").value,
+    lastName: document.getElementById("lastName").value,
+    email: document.getElementById("email").value,
+    department: document.getElementById("department").value
+  };
+
+  let url = "http://localhost:8080/api/employees";
+  let method = "POST";
+
+  if(id){
+    url += "/" + id;
+    method = "PUT";
+  }
+
+  const res = await fetch(url,{
+    method: method,
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(data)
+  });
+
+  if(res.ok){
+    document.getElementById("msg").innerText = "✅ Saved";
+    document.getElementById("employeeForm").reset();
+    document.getElementById("employeeId").value = "";
+    loadEmployees();
+  }else{
+    document.getElementById("msg").innerText = "❌ Error";
+  }
+});
+
+// EDIT
+function editEmployee(id, firstName, lastName, email, department){
+  toggleForm();
+
+  document.getElementById("formTitle").innerText = "Edit Employee";
+  document.getElementById("employeeId").value = id;
+  document.getElementById("firstName").value = firstName;
+  document.getElementById("lastName").value = lastName || "";
+  document.getElementById("email").value = email;
+  document.getElementById("department").value = department || "";
+}
+
+// DELETE
+async function deleteEmployee(id){
+  if(!confirm("Delete this employee?")) return;
+
+  await fetch(`http://localhost:8080/api/employees/${id}`,{
+    method:"DELETE"
+  });
+
+  loadEmployees();
+}
+</script>
+
+</body>
+</html>

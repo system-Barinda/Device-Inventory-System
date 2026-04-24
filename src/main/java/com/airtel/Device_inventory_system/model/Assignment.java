@@ -9,59 +9,46 @@ public class Assignment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "assignment_id")
     private Long assignmentId;
 
+    // 🔗 Device
     @ManyToOne
     @JoinColumn(name = "device_id")
     private Device device;
 
+    // 🔗 Employee
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "employee_id")
+    private Employee employee;
 
+    @Column(name = "assigned_date")
     private LocalDate assignedDate;
-    private LocalDate returnDate;
-    private String status; // assigned, returned
 
-    // ✅ Constructors
+    @Column(name = "return_date")
+    private LocalDate returnDate;
+
+    @Column(name = "status")
+    private String status;
+
+    // Constructor
     public Assignment() {}
 
-    public Assignment(Long assignmentId, Device device, User user,
-                      LocalDate assignedDate, LocalDate returnDate, String status) {
-        this.assignmentId = assignmentId;
-        this.device = device;
-        this.user = user;
-        this.assignedDate = assignedDate;
-        this.returnDate = returnDate;
-        this.status = status;
-    }
-
-    // ✅ Getters
+    // Getters & Setters
     public Long getAssignmentId() { return assignmentId; }
+
     public Device getDevice() { return device; }
-    public User getUser() { return user; }
-    public LocalDate getAssignedDate() { return assignedDate; }
-    public LocalDate getReturnDate() { return returnDate; }
-    public String getStatus() { return status; }
-
-    // ✅ Setters
-    public void setAssignmentId(Long assignmentId) { this.assignmentId = assignmentId; }
     public void setDevice(Device device) { this.device = device; }
-    public void setUser(User user) { this.user = user; }
-    public void setAssignedDate(LocalDate assignedDate) { this.assignedDate = assignedDate; }
-    public void setReturnDate(LocalDate returnDate) { this.returnDate = returnDate; }
-    public void setStatus(String status) { this.status = status; }
 
-    // ✅ toString
-    @Override
-    public String toString() {
-        return "Assignment{" +
-                "assignmentId=" + assignmentId +
-                ", device=" + device +
-                ", user=" + user +
-                ", assignedDate=" + assignedDate +
-                ", returnDate=" + returnDate +
-                ", status='" + status + '\'' +
-                '}';
-    }
+    public Employee getEmployee() { return employee; }
+    public void setEmployee(Employee employee) { this.employee = employee; }
+
+    public LocalDate getAssignedDate() { return assignedDate; }
+    public void setAssignedDate(LocalDate assignedDate) { this.assignedDate = assignedDate; }
+
+    public LocalDate getReturnDate() { return returnDate; }
+    public void setReturnDate(LocalDate returnDate) { this.returnDate = returnDate; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

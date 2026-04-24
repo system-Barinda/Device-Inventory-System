@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Assignment</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#f4f7fb}
+
+/* NAVBAR */
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 20px;
+  background:white;
+  flex-wrap:wrap;
+}
+
+.logo{font-weight:bold}
+
+.nav-links{
+  display:flex;
+  flex-wrap:wrap;
+}
+
+.nav-links a{
+  margin:5px 10px;
+  text-decoration:none;
+  color:#555;
+}
+
+.logout{
+  background:#e74c3c;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* CONTAINER */
+.container{
+  padding:20px;
+  max-width:1100px;
+  margin:auto;
+}
+
+/* CARD */
+.card{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.05);
+  margin-bottom:20px;
+}
+
+.card h2{
+  margin-bottom:15px;
+}
+
+/* FORM */
+.field{margin-bottom:12px}
+
+.field label{
+  font-size:13px;
+  display:block;
+  margin-bottom:5px;
+}
+
+.field select{
+  width:100%;
+  padding:10px;
+  border:1px solid #ccc;
+  border-radius:6px;
+}
+
+/* BUTTON */
+.btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  background:#5b5be6;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.btn:hover{background:#4444cc}
+
+.btn:disabled{
+  background:#aaa;
+  cursor:not-allowed;
+}
+
+.msg{
+  margin-top:10px;
+  text-align:center;
+}
+
+/* TABLE */
+.table-container{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.05);
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:600px;
+}
+
+th, td{
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+
+th{
+  background:#f1f1f1;
+}
+
+/* STATUS COLORS */
+.status{
+  padding:5px 10px;
+  border-radius:6px;
+  font-size:12px;
+  display:inline-block;
+}
+
+.assigned{background:#d4edda;color:#155724}
+.returned{background:#fff3cd;color:#856404}
+.maintenance{background:#f8d7da;color:#721c24}
+
+/* MOBILE */
+@media(max-width:600px){
+  .navbar{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .btn{
+    font-size:14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <div class="logo">Airtel Inventory</div>
+
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="devices.html">Devices</a>
+    <a href="employees.html">Employees</a>
+    <a href="assignment.html">Assignment</a>
+  </div>
+
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+  <!-- FORM -->
+  <div class="card">
+    <h2>Assign Device</h2>
+
+    <form id="assignForm">
+
+      <div class="field">
+        <label>Device</label>
+        <select id="deviceId" required></select>
+      </div>
+
+      <div class="field">
+        <label>Employee</label>
+        <select id="employeeId" required></select>
+      </div>
+
+      <button type="submit" class="btn" id="assignBtn">Assign</button>
+    </form>
+
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-container">
+    <h2>Assignments</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Device</th>
+          <th>Employee</th>
+          <th>Assigned Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="assignmentTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// AUTH
+if(!localStorage.getItem("user")){
+  window.location.href = "login.html";
+}
+
+function logout(){
+  localStorage.removeItem("user");
+  window.location.href = "login.html";
+}
+
+// LOAD DEVICES
+async function loadDevices(){
+  const select = document.getElementById("deviceId");
+
+  try{
+    const res = await fetch("http://localhost:8080/api/devices/available");
+    const devices = await res.json();
+
+    select.innerHTML = "<option value=''>Select Device</option>";
+
+    devices.forEach(d=>{
+      select.innerHTML += `
+        <option value="${d.deviceId}">
+          ${d.deviceName} (${d.serialNumber || "N/A"})
+        </option>`;
+    });
+
+  }catch{
+    select.innerHTML = "<option>Error loading devices</option>";
+  }
+}
+
+// LOAD EMPLOYEES
+async function loadEmployees(){
+  const select = document.getElementById("employeeId");
+
+  try{
+    const res = await fetch("http://localhost:8080/api/employees");
+    const employees = await res.json();
+
+    select.innerHTML = "<option value=''>Select Employee</option>";
+
+    employees.forEach(e=>{
+      select.innerHTML += `
+        <option value="${e.employeeId}">
+          ${e.firstName} ${e.lastName || ""}
+        </option>`;
+    });
+
+  }catch{
+    select.innerHTML = "<option>Error loading employees</option>";
+  }
+}
+
+// LOAD ASSIGNMENTS (FIXED MAPPING)
+async function loadAssignments(){
+  const table = document.getElementById("assignmentTable");
+
+  try{
+    const res = await fetch("http://localhost:8080/api/assignments");
+    const data = await res.json();
+
+    table.innerHTML = "";
+
+    data.forEach(a=>{
+      const statusClass =
+        a.status === "Assigned" ? "assigned" :
+        a.status === "Returned" ? "returned" :
+        "maintenance";
+
+      table.innerHTML += `
+        <tr>
+          <td>${a.device?.deviceName || "N/A"}</td>
+          <td>${a.employee?.firstName || ""} ${a.employee?.lastName || ""}</td>
+          <td>${a.assignedDate || "Today"}</td>
+          <td><span class="status ${statusClass}">
+              ${a.status || "Assigned"}
+          </span></td>
+        </tr>
+      `;
+    });
+
+  }catch{
+    table.innerHTML = "<tr><td colspan='4'>Error loading assignments</td></tr>";
+  }
+}
+
+// ASSIGN DEVICE
+document.getElementById("assignForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+
+  const deviceId = document.getElementById("deviceId").value;
+  const employeeId = document.getElementById("employeeId").value;
+  const msg = document.getElementById("msg");
+  const btn = document.getElementById("assignBtn");
+
+  if(!deviceId || !employeeId){
+    msg.innerText = "❌ Select device and employee";
+    return;
+  }
+
+  btn.disabled = true;
+  msg.innerText = "Processing...";
+
+  try{
+    const res = await fetch(
+      `http://localhost:8080/api/assignments/${deviceId}/${employeeId}`,
+      { method: "POST" }
+    );
+
+    if(res.ok){
+      msg.innerText = "✅ Assigned successfully";
+
+      document.getElementById("assignForm").reset();
+      loadDevices();
+      loadAssignments();
+
+    }else{
+      msg.innerText = "❌ Assignment failed";
+    }
+
+  }catch{
+    msg.innerText = "❌ Server error";
+  }
+
+  btn.disabled = false;
+});
+
+// INIT
+loadDevices();
+loadEmployees();
+loadAssignments();
+</script>
+
+</body>
+</html>

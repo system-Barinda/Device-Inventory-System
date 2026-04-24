@@ -1,33 +1,36 @@
 package com.airtel.Device_inventory_system.controller;
 
-
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 import com.airtel.Device_inventory_system.model.Assignment;
+import com.airtel.Device_inventory_system.repositor.AssignmentRepository;
 import com.airtel.Device_inventory_system.service.AssignmentService;
+
 
 @RestController
 @RequestMapping("/api/assignments")
 public class AssignmentController {
 
     private final AssignmentService assignmentService;
+    private final AssignmentRepository assignmentRepository;
 
-    public AssignmentController(AssignmentService assignmentService) {
+    public AssignmentController(AssignmentService assignmentService,
+                                AssignmentRepository assignmentRepository) {
         this.assignmentService = assignmentService;
+        this.assignmentRepository = assignmentRepository;
     }
 
-    // ASSIGN DEVICE
-    @PostMapping("/assign")
-    public Assignment assignDevice(
-            @RequestParam Long deviceId,
-            @RequestParam Long userId) {
-
-        return assignmentService.assignDevice(deviceId, userId);
+    // ✅ ASSIGN DEVICE
+    @PostMapping("/{deviceId}/{employeeId}")
+    public Assignment assignDevice(@PathVariable Long deviceId,
+                                   @PathVariable Long employeeId) {
+        return assignmentService.assignDevice(deviceId, employeeId);
     }
 
-    // RETURN DEVICE
-    @PostMapping("/return/{assignmentId}")
-    public Assignment returnDevice(@PathVariable Long assignmentId) {
-        return assignmentService.returnDevice(assignmentId);
+    // ✅ GET ALL ASSIGNMENTS
+    @GetMapping
+    public List<Assignment> getAllAssignments() {
+        return assignmentRepository.findAll();
     }
 }
