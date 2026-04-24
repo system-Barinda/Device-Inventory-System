@@ -1,0 +1,98 @@
+<footer class="footer">
+  <div class="footer-container">
+
+    <!-- LEFT: LOGO -->
+    <div class="footer-logo">
+      <h2>Airtel</h2>
+    </div>
+
+    <!-- CENTER: LINKS -->
+    <div class="footer-links">
+      <a href="#">Home</a>
+      <a href="#">Devices</a>
+      <a href="#">Users</a>
+      <a href="#">Reports</a>
+      <a href="#">Contact</a>
+    </div>
+
+    <!-- RIGHT: SOCIAL -->
+    <div class="footer-social">
+      <span>🌐</span>
+      <span>📘</span>
+      <span>🐦</span>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="footer-bottom">
+    <p>© 2026 Airtel Inventory System. All Rights Reserved</p>
+  </div>
+</footer>
+
+<style>
+.footer{
+  background:#f1f5f9;
+  border-top:1px solid #ddd;
+  margin-top:40px;
+}
+
+/* TOP SECTION */
+.footer-container{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px 40px;
+  flex-wrap:wrap;
+}
+
+/* LOGO */
+.footer-logo h2{
+  color:#185FA5;
+  font-size:20px;
+}
+
+/* LINKS */
+.footer-links a{
+  margin:0 10px;
+  text-decoration:none;
+  color:#555;
+  font-size:14px;
+  transition:0.2s;
+}
+
+.footer-links a:hover{
+  color:#185FA5;
+}
+
+/* SOCIAL */
+.footer-social span{
+  margin-left:10px;
+  cursor:pointer;
+  font-size:16px;
+}
+
+/* BOTTOM */
+.footer-bottom{
+  text-align:center;
+  background:#2c2c2c;
+  color:#fff;
+  padding:10px;
+  font-size:13px;
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .footer-container{
+    flex-direction:column;
+    text-align:center;
+    gap:10px;
+  }
+
+  .footer-links{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+}
+</style>

@@ -285,29 +285,37 @@ function showMsg(id,text,type){
 }
 
 async function handleLogin(){
-  const email=document.getElementById('login-email').value.trim();
-  const password=document.getElementById('login-password').value;
+	  const email = document.getElementById('login-email').value.trim();
+	  const password = document.getElementById('login-password').value;
 
-  if(!email||!password){
-    showMsg('login-msg','Fill all fields','error');return;
-  }
+	  if(!email || !password){
+	    showMsg('login-msg','Fill all fields','error');
+	    return;
+	  }
 
-  try{
-    const res=await fetch('http://localhost:8080/api/auth/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email,password})
-    });
+	  try{
+	    const res = await fetch('http://localhost:8080/api/auth/login',{
+	      method:'POST',
+	      headers:{'Content-Type':'application/json'},
+	      body: JSON.stringify({email, password})
+	    });
 
-    if(res.ok){
-      showMsg('login-msg','Login success','success');
-    }else{
-      showMsg('login-msg','Invalid credentials','error');
-    }
-  }catch{
-    showMsg('login-msg','Server error','error');
-  }
-}
+	    if(res.ok){
+	      showMsg('login-msg','Login successful! Redirecting...','success');
+
+	      // ✅ REDIRECT AFTER 1 SECOND
+	      setTimeout(()=>{
+	        window.location.href = "dashboard.html";
+	      },1000);
+
+	    }else{
+	      showMsg('login-msg','Invalid credentials','error');
+	    }
+
+	  }catch{
+	    showMsg('login-msg','Server error','error');
+	  }
+	}
 
 async function handleRegister(){
   const fullName=document.getElementById('reg-fullname').value.trim();
