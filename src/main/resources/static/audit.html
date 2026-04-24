@@ -9,21 +9,6 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 body{background:#f4f7fb}
 
-/* NAVBAR */
-.navbar{
-  display:flex;
-  justify-content:space-between;
-  padding:15px 30px;
-  background:white;
-  flex-wrap:wrap;
-}
-
-.nav-links a{
-  margin:0 10px;
-  text-decoration:none;
-  color:#555;
-}
-
 /* CONTAINER */
 .container{
   max-width:900px;
@@ -105,17 +90,8 @@ select{
 
 <body>
 
-<div class="navbar">
-  <div><b>Airtel Inventory</b></div>
-
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="devices.html">Devices</a>
-    <a href="employees.html">Employees</a>
-    <a href="assignment.html">Assignment</a>
-    <a href="audit.html">Audit</a>
-  </div>
-</div>
+<!-- ✅ SHARED NAVBAR -->
+<div id="navbar-container"></div>
 
 <div class="container">
 
@@ -132,6 +108,25 @@ select{
 </div>
 
 <script>
+// 🔐 AUTH
+if(!localStorage.getItem("user")){
+  window.location.href = "login.html";
+}
+
+// ✅ LOAD NAVBAR
+async function loadNavbar(){
+  const res = await fetch("navbar.html");
+  const data = await res.text();
+  document.getElementById("navbar-container").innerHTML = data;
+}
+loadNavbar();
+
+// LOGOUT (used by navbar)
+function logout(){
+  localStorage.removeItem("user");
+  window.location.href = "login.html";
+}
+
 // LOAD DEVICES
 async function loadDevices(){
   const select = document.getElementById("deviceSelect");
@@ -155,7 +150,7 @@ async function loadDevices(){
   }
 }
 
-// LOAD TIMELINE (✅ FIXED TO USE AUDIT API)
+// LOAD TIMELINE
 async function loadTimeline(deviceId){
   const timeline = document.getElementById("timeline");
 

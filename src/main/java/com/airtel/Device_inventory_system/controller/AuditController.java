@@ -3,12 +3,15 @@ package com.airtel.Device_inventory_system.controller;
 import com.airtel.Device_inventory_system.model.AuditHistory;
 import com.airtel.Device_inventory_system.service.AuditService;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/audit")
-@CrossOrigin(origins = "*") // ✅ allow frontend access
+// ✅ FIXED CORS (match your frontend)
+@CrossOrigin(origins = {"http://127.0.0.1:5500", "http://localhost:5500"})
 public class AuditController {
 
     private final AuditService auditService;
@@ -19,19 +22,37 @@ public class AuditController {
 
     // ✅ GET ALL HISTORY
     @GetMapping
-    public List<AuditHistory> getAllHistory() {
-        return auditService.getAllHistory();
+    public ResponseEntity<?> getAllHistory() {
+        try {
+            List<AuditHistory> history = auditService.getAllHistory();
+            return ResponseEntity.ok(history);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body("Error fetching audit history: " + e.getMessage());
+        }
     }
 
-    // ✅ GET HISTORY BY DEVICE (for timeline page)
+    // ✅ GET HISTORY BY DEVICE
     @GetMapping("/device/{deviceId}")
-    public List<AuditHistory> getByDevice(@PathVariable Long deviceId) {
-        return auditService.getHistoryByDevice(deviceId);
+    public ResponseEntity<?> getByDevice(@PathVariable Long deviceId) {
+        try {
+            List<AuditHistory> history = auditService.getHistoryByDevice(deviceId);
+            return ResponseEntity.ok(history);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body("Error fetching device history: " + e.getMessage());
+        }
     }
 
-    // ✅ FIXED: use EMPLOYEE instead of USER
+    // ✅ GET HISTORY BY EMPLOYEE
     @GetMapping("/employee/{employeeId}")
-    public List<AuditHistory> getByEmployee(@PathVariable Long employeeId) {
-        return auditService.getHistoryByEmployee(employeeId);
+    public ResponseEntity<?> getByEmployee(@PathVariable Long employeeId) {
+        try {
+            List<AuditHistory> history = auditService.getHistoryByEmployee(employeeId);
+            return ResponseEntity.ok(history);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body("Error fetching employee history: " + e.getMessage());
+        }
     }
 }

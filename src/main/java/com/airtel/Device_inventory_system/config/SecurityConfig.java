@@ -1,6 +1,5 @@
 package com.airtel.Device_inventory_system.config;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,14 +10,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
             .csrf().disable()
-            .authorizeHttpRequests()
-                .antMatchers("/api/auth/**").permitAll()
-                .anyRequest().permitAll()
-            .and()
-            .httpBasic().disable()
-            .formLogin().disable();
+            .cors().and()
+            .authorizeRequests()
+            .anyRequest().permitAll(); // ✅ allow all requests
+
         return http.build();
     }
 }

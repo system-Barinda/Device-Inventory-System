@@ -9,38 +9,6 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 body{background:#f4f7fb}
 
-/* NAVBAR */
-.navbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 20px;
-  background:white;
-  flex-wrap:wrap;
-}
-
-.logo{font-weight:bold}
-
-.nav-links{
-  display:flex;
-  flex-wrap:wrap;
-}
-
-.nav-links a{
-  margin:5px 10px;
-  text-decoration:none;
-  color:#555;
-}
-
-.logout{
-  background:#e74c3c;
-  color:white;
-  border:none;
-  padding:8px 12px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
 /* CONTAINER */
 .container{
   padding:20px;
@@ -136,35 +104,13 @@ th{
 .assigned{background:#d4edda;color:#155724}
 .returned{background:#fff3cd;color:#856404}
 .maintenance{background:#f8d7da;color:#721c24}
-
-/* MOBILE */
-@media(max-width:600px){
-  .navbar{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-  .btn{
-    font-size:14px;
-  }
-}
 </style>
 </head>
 
 <body>
 
-<div class="navbar">
-  <div class="logo">Airtel Inventory</div>
-
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="devices.html">Devices</a>
-    <a href="employees.html">Employees</a>
-    <a href="assignment.html">Assignment</a>
-  </div>
-
-  <button class="logout" onclick="logout()">Logout</button>
-</div>
+<!-- ✅ NAVBAR LOADED HERE -->
+<div id="navbar-container"></div>
 
 <div class="container">
 
@@ -210,11 +156,20 @@ th{
 </div>
 
 <script>
-// AUTH
+// 🔐 AUTH
 if(!localStorage.getItem("user")){
   window.location.href = "login.html";
 }
 
+// ✅ LOAD NAVBAR (GLOBAL)
+async function loadNavbar(){
+  const res = await fetch("navbar.html");
+  const data = await res.text();
+  document.getElementById("navbar-container").innerHTML = data;
+}
+loadNavbar();
+
+// LOGOUT (used by navbar)
 function logout(){
   localStorage.removeItem("user");
   window.location.href = "login.html";
@@ -264,7 +219,7 @@ async function loadEmployees(){
   }
 }
 
-// LOAD ASSIGNMENTS (FIXED MAPPING)
+// LOAD ASSIGNMENTS
 async function loadAssignments(){
   const table = document.getElementById("assignmentTable");
 
@@ -285,9 +240,11 @@ async function loadAssignments(){
           <td>${a.device?.deviceName || "N/A"}</td>
           <td>${a.employee?.firstName || ""} ${a.employee?.lastName || ""}</td>
           <td>${a.assignedDate || "Today"}</td>
-          <td><span class="status ${statusClass}">
+          <td>
+            <span class="status ${statusClass}">
               ${a.status || "Assigned"}
-          </span></td>
+            </span>
+          </td>
         </tr>
       `;
     });
@@ -322,11 +279,9 @@ document.getElementById("assignForm").addEventListener("submit", async function(
 
     if(res.ok){
       msg.innerText = "✅ Assigned successfully";
-
       document.getElementById("assignForm").reset();
       loadDevices();
       loadAssignments();
-
     }else{
       msg.innerText = "❌ Assignment failed";
     }

@@ -15,32 +15,6 @@ body{
   min-height:100vh;
 }
 
-/* NAVBAR */
-.navbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 40px;
-  background:white;
-}
-
-.logo{font-weight:bold;font-size:18px;color:#333}
-
-.nav-links a{
-  margin:0 10px;
-  text-decoration:none;
-  color:#555;
-  font-size:14px;
-}
-
-.login-btn{
-  background:#5b5be6;
-  color:white;
-  padding:8px 16px;
-  border:none;
-  border-radius:20px;
-  cursor:pointer;
-}
 
 /* HERO */
 .hero{
@@ -64,7 +38,6 @@ body{
 }
 
 .hero-text h1{font-size:32px;margin-bottom:15px;color:#222}
-
 .hero-text p{color:#555;font-size:14px;margin-bottom:20px}
 
 .cta{
@@ -110,7 +83,6 @@ body{
 }
 
 .card h4{color:#555;margin-bottom:10px}
-
 .card p{font-size:22px;font-weight:bold;color:#5b5be6}
 
 /* RESPONSIVE */
@@ -125,21 +97,8 @@ body{
 
 <body>
 
-<!-- NAVBAR -->
-<div class="navbar">
-  <div class="logo">Airtel</div>
-
-  <div class="nav-links">
-    <a href="#">Home</a>
-    <a href="employees.html">Users</a>
-    <a href="devices.html">Devices</a>
-    <a href="Assignment.html">assignment</a>
-    <a href="audit.html">Audit History</a>
-    <a href="#">Reports</a>
-  </div>
-
-  <button class="login-btn" onclick="logout()">Logout</button>
-</div>
+<!-- 🔥 NAVBAR LOAD HERE -->
+<div id="navbar-container"></div>
 
 <!-- HERO -->
 <div class="hero">
@@ -166,11 +125,11 @@ body{
   </div>
   <div class="card">
     <h4>Total Devices</h4>
-    <p>12</p>
+    <p id="devices-count">0</p>
   </div>
   <div class="card">
     <h4>Active Devices</h4>
-    <p>8</p>
+    <p id="active-count">0</p>
   </div>
   <div class="card">
     <h4>Departments</h4>
@@ -182,19 +141,27 @@ body{
 <div id="footer-container"></div>
 
 <script>
-// ✅ CHECK LOGIN (MUST BE INSIDE SCRIPT)
+// ✅ AUTH CHECK
 const user = localStorage.getItem("user");
 
 if(!user){
   window.location.href = "login.html";
 }
 
-// ✅ SHOW USER NAME
+// ✅ USER NAME
 const userData = JSON.parse(user);
 document.getElementById("welcome-user").innerText =
   "Welcome " + userData.fullName;
 
-// LOAD USERS COUNT
+// ✅ LOAD NAVBAR
+async function loadNavbar(){
+  const res = await fetch("navbar.html");
+  const data = await res.text();
+  document.getElementById("navbar-container").innerHTML = data;
+}
+loadNavbar();
+
+// ✅ LOAD USERS
 async function loadUsers(){
   try{
     const res = await fetch("http://localhost:8080/api/users");
@@ -204,15 +171,33 @@ async function loadUsers(){
     console.log("Error loading users");
   }
 }
-loadUsers();
 
-// LOGOUT (FIXED)
+// ✅ LOAD DEVICES
+async function loadDevices(){
+  try{
+    const res = await fetch("http://localhost:8080/api/devices");
+    const data = await res.json();
+
+    document.getElementById("devices-count").innerText = data.length;
+
+    const active = data.filter(d => d.status === "Assigned");
+    document.getElementById("active-count").innerText = active.length;
+
+  }catch{
+    console.log("Error loading devices");
+  }
+}
+
+loadUsers();
+loadDevices();
+
+// ✅ LOGOUT
 function logout(){
-  localStorage.removeItem("user"); // 🔥 important
+  localStorage.removeItem("user");
   window.location.href = "login.html";
 }
 
-// LOAD FOOTER
+// ✅ FOOTER
 async function loadFooter(){
   try{
     const res = await fetch("footer.html");

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Report</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
+body{background:#f4f7fb}
+
+/* CONTAINER */
+.report{
+  max-width:900px;
+  margin:40px auto;
+  background:white;
+  padding:30px;
+  border-radius:10px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.05);
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.title h1{
+  font-size:38px;
+  color:#2c7da0;
+}
+
+.title h2{
+  font-size:20px;
+}
+
+/* BUTTONS */
+.actions{
+  margin-top:20px;
+  display:flex;
+  gap:10px;
+}
+
+button{
+  padding:10px 15px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.print{background:#333;color:white}
+.pdf{background:#e74c3c;color:white}
+.excel{background:#27ae60;color:white}
+
+/* TABLE */
+table{
+  width:100%;
+  margin-top:25px;
+  border-collapse:collapse;
+}
+
+th, td{
+  padding:10px;
+  border-bottom:1px solid #ddd;
+}
+
+th{background:#f1f1f1}
+
+/* STATUS COLORS */
+.assigned{color:green}
+.returned{color:orange}
+.updated{color:blue}
+
+/* FOOTER */
+.footer{
+  margin-top:20px;
+  text-align:right;
+  font-size:12px;
+  color:#999;
+}
+
+/* PRINT */
+@media print{
+  .actions, #navbar-container{display:none}
+  body{background:white}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ✅ LOAD NAVBAR -->
+<div id="navbar-container"></div>
+
+<div class="report" id="reportContent">
+
+  <div class="header">
+    <div>
+      <b>COMPANY</b><br>
+      Airtel Device System
+    </div>
+    <div class="title">
+      <h1>DAILY</h1>
+      <h2>ACTIVITY REPORT</h2>
+    </div>
+  </div>
+
+  <p style="margin-top:10px;color:#555">
+    This report shows all system activities including assignments, returns and updates.
+  </p>
+
+  <div class="actions">
+    <button class="print" onclick="window.print()">Print</button>
+    <button class="pdf" onclick="downloadPDF()">Download PDF</button>
+    <button class="excel" onclick="downloadExcel()">Download Excel</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Device</th>
+        <th>Employee</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="reportTable"></tbody>
+  </table>
+
+  <div class="footer">
+    Generated on: <span id="dateNow"></span>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+// ✅ LOAD NAVBAR
+async function loadNavbar(){
+  const res = await fetch("navbar.html");
+  const data = await res.text();
+  document.getElementById("navbar-container").innerHTML = data;
+}
+loadNavbar();
+
+// ✅ SET DATE
+document.getElementById("dateNow").innerText =
+  new Date().toLocaleString();
+
+// ✅ LOAD AUDIT DATA
+async function loadReport(){
+  const table = document.getElementById("reportTable");
+
+  try{
+    const res = await fetch("http://localhost:8080/api/audit");
+    const data = await res.json();
+
+    if(data.length === 0){
+      table.innerHTML = "<tr><td colspan='4'>No activity found</td></tr>";
+      return;
+    }
+
+    table.innerHTML = "";
+
+    data.forEach(a=>{
+      let cls = "updated";
+
+      if(a.action.toLowerCase().includes("assign")) cls = "assigned";
+      if(a.action.toLowerCase().includes("return")) cls = "returned";
+
+      table.innerHTML += `
+        <tr>
+          <td>${formatDate(a.actionDate)}</td>
+          <td>${a.device?.deviceName || "-"}</td>
+          <td>${a.employee?.firstName || ""} ${a.employee?.lastName || ""}</td>
+          <td class="${cls}">${a.action}</td>
+        </tr>
+      `;
+    });
+
+  }catch{
+    table.innerHTML = "<tr><td colspan='4'>Error loading report</td></tr>";
+  }
+}
+
+// FORMAT DATE
+function formatDate(date){
+  return new Date(date).toLocaleString();
+}
+
+// PDF
+function downloadPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.text("Daily Activity Report", 20, 20);
+
+  let y = 30;
+
+  document.querySelectorAll("#reportTable tr").forEach(row=>{
+    const cols = row.querySelectorAll("td");
+
+    let text = "";
+    cols.forEach(col=>{
+      text += col.innerText + " | ";
+    });
+
+    doc.text(text, 20, y);
+    y += 10;
+  });
+
+  doc.save("Activity_Report.pdf");
+}
+
+// EXCEL
+function downloadExcel(){
+  let csv = "Date,Device,Employee,Action\n";
+
+  document.querySelectorAll("#reportTable tr").forEach(row=>{
+    const cols = row.querySelectorAll("td");
+
+    let rowData = [];
+    cols.forEach(col=>{
+      rowData.push(col.innerText);
+    });
+
+    csv += rowData.join(",") + "\n";
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+  link.download = "Activity_Report.csv";
+  link.click();
+}
+
+// INIT
+loadReport();
+</script>
+
+</body>
+</html>

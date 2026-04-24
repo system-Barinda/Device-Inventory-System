@@ -1,0 +1,126 @@
+<!-- NAVBAR COMPONENT -->
+<style>
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 40px;
+  background:white;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+  position:sticky;
+  top:0;
+  z-index:1000;
+}
+
+.logo{
+  font-weight:bold;
+  font-size:18px;
+  color:#333;
+}
+
+.nav-links{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.nav-links a{
+  margin:0 10px;
+  text-decoration:none;
+  color:#555;
+  font-size:14px;
+}
+
+.nav-links a.active{
+  color:#5b5be6;
+  font-weight:bold;
+}
+
+.login-btn{
+  background:#5b5be6;
+  color:white;
+  padding:8px 16px;
+  border:none;
+  border-radius:20px;
+  cursor:pointer;
+}
+
+/* SAFETY FIX */
+#logoutBtn{
+  position:relative;
+  z-index:9999;
+  pointer-events:auto;
+}
+</style>
+
+<div class="navbar">
+  <div class="logo"><b>Airtel</b></div>
+
+  <div class="nav-links">
+    <a href="dashboard.html">Home</a>
+    <a href="employees.html">Users</a>
+    <a href="devices.html">Devices</a>
+    <a href="assignment.html">Assignment</a>
+    <a href="audit.html">Audit History</a>
+    <a href="report.html">Reports</a>
+  </div>
+
+  <!-- IMPORTANT -->
+  <button type="button" class="login-btn" id="logoutBtn">Logout</button>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+  // ✅ ACTIVE LINK
+  const links = document.querySelectorAll(".nav-links a");
+  const currentPage = window.location.pathname.split("/").pop();
+
+  links.forEach(link=>{
+    if(link.getAttribute("href") === currentPage){
+      link.classList.add("active");
+    }
+  });
+
+  // ✅ LOGOUT FUNCTION (CONNECTED TO BACKEND)
+  async function logoutUser(){
+    console.log("Logout clicked");
+
+    try {
+      // CALL SPRING BOOT LOGOUT API
+      await fetch("http://localhost:8080/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    } catch (error) {
+      console.log("Backend logout failed, continuing...");
+    }
+
+    // ✅ ALWAYS CLEAR FRONTEND SESSION
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // ✅ FORCE REDIRECT
+    window.location.replace("login.html");
+  }
+
+  // ✅ BUTTON CLICK
+  const btn = document.getElementById("logoutBtn");
+
+  if(btn){
+    btn.addEventListener("click", logoutUser);
+  }
+
+});
+
+// ✅ BACKUP CLICK HANDLER (VERY IMPORTANT)
+document.addEventListener("click", function(e){
+  if(e.target && e.target.id === "logoutBtn"){
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.replace("login.html");
+  }
+});
+</script>

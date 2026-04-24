@@ -9,19 +9,6 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 body{background:#f4f7fb}
 
-/* NAVBAR */
-.navbar{
-  display:flex;justify-content:space-between;
-  align-items:center;padding:15px 40px;background:white;
-}
-
-.nav-links a{margin:0 10px;text-decoration:none;color:#555}
-
-.logout{
-  background:#e74c3c;color:white;border:none;
-  padding:8px 12px;border-radius:6px;cursor:pointer;
-}
-
 /* CONTAINER */
 .container{padding:40px}
 
@@ -91,17 +78,8 @@ th{background:#f1f1f1}
 
 <body>
 
-<!-- NAVBAR -->
-<div class="navbar">
-  <div><b>Airtel Devices</b></div>
-
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="devices.html">Devices</a>
-  </div>
-
-  <button class="logout" onclick="logout()">Logout</button>
-</div>
+<!-- ✅ NAVBAR LOAD -->
+<div id="navbar-container"></div>
 
 <!-- CONTENT -->
 <div class="container">
@@ -181,6 +159,14 @@ th{background:#f1f1f1}
 </div>
 
 <script>
+// ✅ LOAD NAVBAR
+async function loadNavbar(){
+  const res = await fetch("navbar.html");
+  const data = await res.text();
+  document.getElementById("navbar-container").innerHTML = data;
+}
+loadNavbar();
+
 // 🔐 PROTECT
 if(!localStorage.getItem("user")){
   window.location.href="login.html";
@@ -248,7 +234,7 @@ async function loadDevices(){
 
 loadDevices();
 
-// SAVE (ADD + EDIT)
+// SAVE
 document.getElementById("deviceForm").addEventListener("submit", async function(e){
   e.preventDefault();
 
