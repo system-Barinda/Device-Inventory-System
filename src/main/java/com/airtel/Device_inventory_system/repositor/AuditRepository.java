@@ -2,6 +2,7 @@ package com.airtel.Device_inventory_system.repositor;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+
 import com.airtel.Device_inventory_system.model.AuditHistory;
 
 import java.util.List;

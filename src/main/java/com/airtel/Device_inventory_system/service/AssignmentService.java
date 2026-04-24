@@ -1,8 +1,8 @@
 package com.airtel.Device_inventory_system.service;
 
 
-import org.springframework.stereotype.Service;
 
+import org.springframework.stereotype.Service;
 import com.airtel.Device_inventory_system.model.Assignment;
 import com.airtel.Device_inventory_system.model.AuditHistory;
 import com.airtel.Device_inventory_system.model.Device;
@@ -16,7 +16,6 @@ import java.time.LocalDate;
 
 @Service
 public class AssignmentService {
-
     private final AssignmentRepository assignmentRepository;
     private final DeviceRepository deviceRepository;
     private final UserRepository userRepository;
@@ -27,16 +26,14 @@ public class AssignmentService {
             DeviceRepository deviceRepository,
             UserRepository userRepository,
             AuditRepository auditRepository) {
-
         this.assignmentRepository = assignmentRepository;
         this.deviceRepository = deviceRepository;
         this.userRepository = userRepository;
         this.auditRepository = auditRepository;
     }
 
-    // 🔥 ASSIGN DEVICE
+    // ASSIGN DEVICE
     public Assignment assignDevice(Long deviceId, Long userId) {
-
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new RuntimeException("Device not found"));
 
@@ -54,24 +51,22 @@ public class AssignmentService {
         assignment.setStatus("assigned");
 
         device.setStatus("assigned");
-
         deviceRepository.save(device);
+
         Assignment savedAssignment = assignmentRepository.save(assignment);
 
-        // 🔥 SAVE AUDIT
-        AuditRepository audit = new AuditRepository();
+        // SAVE AUDIT ✅ Fixed
+        AuditHistory audit = new AuditHistory();
         audit.setDevice(device);
         audit.setUser(user);
         audit.setAction("assigned");
-
         auditRepository.save(audit);
 
         return savedAssignment;
     }
 
-    // 🔥 RETURN DEVICE
+    // RETURN DEVICE
     public Assignment returnDevice(Long assignmentId) {
-
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found"));
 
@@ -80,16 +75,15 @@ public class AssignmentService {
 
         Device device = assignment.getDevice();
         device.setStatus("available");
-
         deviceRepository.save(device);
+
         Assignment updated = assignmentRepository.save(assignment);
 
-        // 🔥 SAVE AUDIT
+        // SAVE AUDIT ✅ Already correct
         AuditHistory audit = new AuditHistory();
         audit.setDevice(device);
         audit.setUser(assignment.getUser());
         audit.setAction("returned");
-
         auditRepository.save(audit);
 
         return updated;
