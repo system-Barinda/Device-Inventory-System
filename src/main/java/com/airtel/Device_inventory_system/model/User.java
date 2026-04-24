@@ -22,14 +22,15 @@ public class User {
     public User() {}
 
     public User(Long userId, String fullName, String email,
-                String department, String role, LocalDateTime createdAt) {
-        this.userId = userId;
-        this.fullName = fullName;
-        this.email = email;
-        this.department = department;
-        this.role = role;
-        this.createdAt = createdAt;
-    }
+            String department, String role, String password, LocalDateTime createdAt) {
+    this.userId = userId;
+    this.fullName = fullName;
+    this.email = email;
+    this.department = department;
+    this.role = role;
+    this.password = password;
+    this.createdAt = createdAt;
+}
 
     // ✅ Getters
     public Long getUserId() { return userId; }

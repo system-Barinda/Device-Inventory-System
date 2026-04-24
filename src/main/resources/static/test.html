@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head><title>API Test</title></head>
+<body>
+  <h2>Test Register</h2>
+  <button onclick="testRegister()">Register Test User</button>
+  <pre id="result1"></pre>
+
+  <h2>Test Login</h2>
+  <button onclick="testLogin()">Login Test User</button>
+  <pre id="result2"></pre>
+
+  <script>
+    async function testRegister() {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          fullName: "Jean Mutabazi",
+          email: "jean@airtel.rw",
+          department: "IT",
+          role: "Admin",
+          password: "password123"
+        })
+      });
+      const text = await res.text();
+      document.getElementById('result1').textContent = 'Status: ' + res.status + '\nResponse: ' + text;
+    }
+
+    async function testLogin() {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          email: "jean@airtel.rw",
+          password: "password123"
+        })
+      });
+      const text = await res.text();
+      document.getElementById('result2').textContent = 'Status: ' + res.status + '\nResponse: ' + text;
+    }
+  </script>
+</body>
+</html>
