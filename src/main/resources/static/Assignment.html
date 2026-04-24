@@ -3,137 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Device Assignment - Airtel Inventory</title>
+<title>Airtel Inventory | Device Management</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family: 'Segoe UI', Arial, sans-serif}
-body{background:#f4f7fb; color: #333;}
-
-/* CONTAINER */
-.container{
-  padding:20px;
-  max-width:1100px;
-  margin:auto;
+:root {
+    --airtel-red: #E40000;
+    --airtel-blue: #185FA5;
+    --bg-light: #f0f2f5;
+    --text-main: #2d3436;
 }
 
-/* RESPONSIVE GRID LAYOUT */
+*{margin:0;padding:0;box-sizing:border-box;font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif}
+body{background: var(--bg-light); color: var(--text-main); line-height: 1.6;}
+
+#navbar-container { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
+
+.container{ padding:0 20px; max-width:1200px; margin:auto; padding-bottom: 50px; }
+
 .layout-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 30px;
+    align-items: start;
 }
 
-@media (min-width: 850px) {
-    .layout-grid {
-        grid-template-columns: 350px 1fr; /* Sidebar for form, wide area for table */
-    }
+@media (min-width: 992px) {
+    .layout-grid { grid-template-columns: 400px 1fr; }
 }
 
-/* CARD & TABLE CONTAINER */
-.card, .table-container {
+.card {
   background:white;
-  padding:25px;
-  border-radius:12px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  padding:30px;
+  border-radius:16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
-.card h2, .table-container h2 {
-  margin-bottom: 20px;
-  font-size: 1.25rem;
-  color: #185FA5;
-}
+h2 { margin-bottom: 25px; font-size: 1.4rem; color: var(--airtel-red); display: flex; align-items: center; gap: 10px; }
 
-/* FORM STYLING */
-.field{margin-bottom:15px}
-.field label{
-  font-size:13px;
-  display:block;
-  margin-bottom:6px;
-  font-weight: 600;
-  color: #555;
-}
+.field { margin-bottom: 20px; }
+.field label { font-size: 13px; display: block; margin-bottom: 8px; font-weight: 700; color: #636e72; text-transform: uppercase; letter-spacing: 0.5px; }
 
-.field select {
-  width:100%;
-  padding:12px;
-  border:1px solid #ddd;
-  border-radius:8px;
-  background: #fff;
+.field select, .field input[type="text"] {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #edf2f7;
+  border-radius: 10px;
   font-size: 14px;
+  transition: all 0.3s ease;
   outline: none;
-  transition: border-color 0.2s;
 }
 
-.field select:focus {
-    border-color: #185FA5;
+.field select:focus, .field input[type="text"]:focus { border-color: var(--airtel-blue); background: #fff; }
+
+#deviceId { height: 250px; scrollbar-width: thin; }
+
+.select-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.select-hint { font-size: 11px; color: #b2bec3; margin-top: 8px; font-style: italic; }
+
+.btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  background: var(--airtel-red);
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 16px;
+  transition: transform 0.2s, background 0.3s;
+  box-shadow: 0 4px 12px rgba(228, 0, 0, 0.2);
 }
 
-/* BUTTON */
-.btn{
-  width:100%;
-  padding:14px;
-  border:none;
-  background:#185FA5;
-  color:white;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight: bold;
-  font-size: 15px;
-  transition: background 0.3s;
+.btn:hover { background: #c10000; transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { background: #fab1a0; cursor: not-allowed; transform: none; }
+
+.msg { margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 14px; text-align: center; display: none; animation: fadeIn 0.3s ease; }
+
+/* Error banner */
+.error-banner {
+    background: #fff5f5;
+    border: 1px solid #ffc9c9;
+    color: #c92a2a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.btn:hover{background:#124a82}
-.btn:disabled{ background:#aaa; cursor:not-allowed; }
+table { width: 100%; border-collapse: separate; border-spacing: 0; }
+th { background: #f8fafc; padding: 15px; text-align: left; font-size: 12px; color: #94a3b8; text-transform: uppercase; font-weight: 800; border-bottom: 2px solid #f1f5f9; }
+td { padding: 18px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; vertical-align: middle; }
+tr:hover td { background: #fcfcfc; }
 
-.msg{
-  margin-top:15px;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  text-align:center;
-  display: none;
+.device-info { display: flex; flex-direction: column; }
+.device-name { font-weight: 700; color: var(--airtel-blue); }
+.device-sn { font-size: 12px; color: #94a3b8; font-family: monospace; }
+
+.user-badge { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #475569; }
+.user-avatar { width: 30px; height: 30px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #64748b; flex-shrink: 0; }
+
+.status-pill { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; display: inline-block; }
+.status-assigned { background: #ebfbee; color: #2f9e44; }
+
+/* Empty/error state rows */
+.state-row td {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
 }
 
-/* TABLE STYLING */
-.table-wrapper {
-  overflow-x: auto; /* Handles small screens */
+.retry-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: var(--airtel-blue);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width: 500px;
-}
+.retry-btn:hover { background: #1248a0; }
 
-th, td{
-  padding:14px;
-  border-bottom:1px solid #eee;
-  text-align:left;
-  font-size: 14px;
-}
-
-th{
-  background:#f8f9fa;
-  color:#666;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 12px;
-  letter-spacing: 0.5px;
-}
-
-/* STATUS BADGES */
-.status{
-  padding:4px 10px;
-  border-radius:20px;
-  font-size:11px;
-  font-weight: bold;
-  display:inline-block;
-}
-
-.assigned{background:#e6fcf5; color:#0ca678}
-.returned{background:#fff4e6; color:#f76707}
-.maintenance{background:#fff0f0; color:#fa5252}
-
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 
@@ -145,20 +143,27 @@ th{
   <div class="layout-grid">
     
     <div class="card">
-      <h2>Assign Device</h2>
+      <h2><span></span> Assign Devices</h2>
+      
       <form id="assignForm">
         <div class="field">
-          <label>Select Available Device</label>
-          <select id="deviceId" required>
-              <option value="">Loading devices...</option>
+          <label>Assign To Employee</label>
+          <select id="employeeId" required>
+              <option value="">Loading staff...</option>
           </select>
         </div>
 
         <div class="field">
-          <label>Assign To Employee</label>
-          <select id="employeeId" required>
-              <option value="">Loading employees...</option>
-          </select>
+          <div class="select-header">
+              <label style="margin-bottom:0">Select Devices</label>
+              <label style="color:var(--airtel-blue); cursor:pointer; font-size: 12px; font-weight: 700; display:flex; align-items:center; gap:4px; text-transform:none; letter-spacing:0;">
+                <input type="checkbox" id="selectAll"> Select All
+              </label>
+          </div>
+          <input type="text" id="deviceSearch" placeholder="Search by name or serial..." style="margin-bottom: 10px;">
+          
+          <select id="deviceId" multiple required></select>
+          <p class="select-hint">Hold Ctrl/Cmd to pick specific multiple devices</p>
         </div>
 
         <button type="submit" class="btn" id="assignBtn">Confirm Assignment</button>
@@ -166,20 +171,21 @@ th{
       <div class="msg" id="msg"></div>
     </div>
 
-    <div class="table-container">
-      <h2>Recent Assignments</h2>
-      <div class="table-wrapper">
+    <div class="card">
+      <h2><span></span> Assignment Records</h2>
+      <div id="assignmentsError" style="display:none"></div>
+      <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
-              <th>Device</th>
-              <th>Employee</th>
+              <th>Device Details</th>
+              <th>Assigned To</th>
               <th>Date</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody id="assignmentTable">
-              <tr><td colspan="4" style="text-align:center;">Loading records...</td></tr>
+              <tr class="state-row"><td colspan="4">Loading history...</td></tr>
           </tbody>
         </table>
       </div>
@@ -189,148 +195,268 @@ th{
 </div>
 
 <script>
-/**
- * 1. CONFIG & AUTH
- */
 const currentHost = window.location.hostname;
 const API_BASE = `http://${currentHost}:8080/api`;
 
-if(!localStorage.getItem("user")){
-  window.location.replace("login.html");
+let allDevicesData = [];
+
+// ─── Navbar ───────────────────────────────────────────────────────────────────
+async function loadNavbar() {
+    try {
+        const res = await fetch("navbar.html");
+        if (res.ok) document.getElementById("navbar-container").innerHTML = await res.text();
+    } catch (e) { /* navbar is optional */ }
 }
 
-/**
- * 2. LOAD NAVBAR
- */
-async function loadNavbar(){
-  try {
-    const res = await fetch("navbar.html");
-    const data = await res.text();
-    document.getElementById("navbar-container").innerHTML = data;
-  } catch (e) { console.error("Navbar failed"); }
-}
+// ─── Device search + render ───────────────────────────────────────────────────
+document.getElementById("deviceSearch").addEventListener("input", function(e) {
+    const term = e.target.value.toLowerCase().trim();
+    const filtered = term
+        ? allDevicesData.filter(d =>
+            d.deviceName.toLowerCase().includes(term) ||
+            (d.serialNumber && d.serialNumber.toLowerCase().includes(term))
+          )
+        : allDevicesData;
+    renderDeviceOptions(filtered);
+    document.getElementById("selectAll").checked = false;
+});
 
-/**
- * 3. DATA FETCHING
- */
-async function loadDevices(){
-  const select = document.getElementById("deviceId");
-  try{
-    // Fetches only devices where status = 'Available'
-    const res = await fetch(`${API_BASE}/devices`, { credentials: 'include' });
-    const allDevices = await res.json();
-    
-    // Filter available devices on frontend if backend endpoint is generic
-    const available = allDevices.filter(d => d.status === "Available");
-    
-    select.innerHTML = "<option value=''>-- Select Device --</option>";
-    if(available.length === 0) {
-        select.innerHTML = "<option value=''>No devices available</option>";
-    } else {
-        available.forEach(d => {
-            select.innerHTML += `<option value="${d.deviceId}">${d.deviceName} [${d.serialNumber || 'No SN'}]</option>`;
-        });
-    }
-  } catch(e) {
-    select.innerHTML = "<option>Error connecting to server</option>";
-  }
-}
+function renderDeviceOptions(devices) {
+    const select = document.getElementById("deviceId");
+    select.innerHTML = "";
 
-async function loadEmployees(){
-  const select = document.getElementById("employeeId");
-  try{
-    const res = await fetch(`${API_BASE}/auth/users`, { credentials: 'include' });
-    const employees = await res.json();
-    select.innerHTML = "<option value=''>-- Select Staff --</option>";
-    employees.forEach(e => {
-      select.innerHTML += `<option value="${e.userId}">${e.fullName} (${e.department})</option>`;
-    });
-  } catch(e) {
-    select.innerHTML = "<option>Error loading users</option>";
-  }
-}
-
-async function loadAssignments(){
-  const table = document.getElementById("assignmentTable");
-  try{
-    const res = await fetch(`${API_BASE}/assignments`, { credentials: 'include' });
-    if(res.status === 401) throw new Error("Unauthorized");
-    
-    const data = await res.json();
-    table.innerHTML = "";
-    
-    if(data.length === 0) {
-        table.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No active assignments found.</td></tr>";
+    if (!devices || devices.length === 0) {
+        const opt = document.createElement("option");
+        opt.disabled = true;
+        opt.text = "No devices found";
+        select.appendChild(opt);
         return;
     }
 
-    data.reverse().forEach(a => {
-      const status = a.status || "Assigned";
-      const statusClass = status.toLowerCase();
-      table.innerHTML += `
-        <tr>
-          <td><b>${a.device?.deviceName || "Unknown"}</b></td>
-          <td>${a.user?.fullName || "N/A"}</td>
-          <td>${a.assignedDate ? new Date(a.assignedDate).toLocaleDateString() : "---"}</td>
-          <td><span class="status ${statusClass}">${status}</span></td>
-        </tr>
-      `;
+    devices.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.deviceId;
+        const sn = d.serialNumber ? d.serialNumber : "No SN";
+        const status = d.status || "Unknown";
+        opt.textContent = `${d.deviceName} — ${sn} (${status})`;
+        if (status.toLowerCase() !== "available") {
+            opt.style.color = "#cbd5e1";
+        }
+        select.appendChild(opt);
     });
-  } catch(e) {
-    table.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Session expired. Please reload.</td></tr>";
-  }
 }
 
-/**
- * 4. FORM LOGIC
- */
-document.getElementById("assignForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const deviceId = document.getElementById("deviceId").value;
-  const userId = document.getElementById("employeeId").value;
-  const msg = document.getElementById("msg");
-  const btn = document.getElementById("assignBtn");
-
-  if(!deviceId || !userId) return;
-
-  btn.disabled = true;
-  msg.style.display = "block";
-  msg.style.background = "#e7f5ff";
-  msg.style.color = "#185FA5";
-  msg.innerText = "Processing...";
-
-  try {
-    // Note: Adjust this URL to match your backend @PostMapping precisely
-    const res = await fetch(`${API_BASE}/assignments/assign/${deviceId}/${userId}`, { 
-        method: "POST",
-        credentials: 'include'
-    });
-
-    if(res.ok) {
-      msg.style.background = "#e6fcf5";
-      msg.style.color = "#0ca678";
-      msg.innerText = "✅ Assignment Successful!";
-      this.reset();
-      
-      // Refresh both to show new list and update available devices
-      setTimeout(() => {
-          msg.style.display = "none";
-          loadDevices();
-          loadAssignments();
-      }, 2000);
-    } else {
-      throw new Error();
+async function loadDevices() {
+    const select = document.getElementById("deviceId");
+    try {
+        const res = await fetch(`${API_BASE}/devices`, { credentials: "include" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allDevicesData = await res.json();
+        renderDeviceOptions(allDevicesData);
+    } catch (e) {
+        select.innerHTML = "";
+        const opt = document.createElement("option");
+        opt.disabled = true;
+        opt.text = "⚠ Failed to load devices";
+        select.appendChild(opt);
+        console.error("loadDevices error:", e);
     }
-  } catch(e) {
-    msg.style.background = "#fff0f0";
-    msg.style.color = "#fa5252";
-    msg.innerText = "❌ Failed. Device might be already assigned.";
-  } finally {
-    btn.disabled = false;
-  }
+}
+
+// ─── Employees ────────────────────────────────────────────────────────────────
+async function loadEmployees() {
+    const select = document.getElementById("employeeId");
+    try {
+        const res = await fetch(`${API_BASE}/auth/users`, { credentials: "include" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const employees = await res.json();
+        select.innerHTML = '<option value="">-- Select Employee --</option>';
+        employees.forEach(emp => {
+            const opt = document.createElement("option");
+            opt.value = emp.userId;
+            opt.textContent = `${emp.fullName} (${emp.department || "N/A"})`;
+            select.appendChild(opt);
+        });
+    } catch (e) {
+        select.innerHTML = '<option value="">⚠ Failed to load employees</option>';
+        console.error("loadEmployees error:", e);
+    }
+}
+
+// ─── Assignments table ────────────────────────────────────────────────────────
+async function loadAssignments() {
+    const table = document.getElementById("assignmentTable");
+    const errorBox = document.getElementById("assignmentsError");
+    errorBox.style.display = "none";
+
+    table.innerHTML = '<tr class="state-row"><td colspan="4">Loading history...</td></tr>';
+
+    try {
+        const res = await fetch(`${API_BASE}/assignments`, { credentials: "include" });
+
+        // Handle server errors gracefully
+        if (!res.ok) {
+            const statusText = res.status === 500
+                ? "Server error (500) — the assignments endpoint is unavailable. Please check your backend."
+                : `Request failed with status ${res.status}.`;
+
+            errorBox.innerHTML = `<div class="error-banner">
+                ⚠ ${statusText}
+                <button class="retry-btn" onclick="loadAssignments()">Retry</button>
+            </div>`;
+            errorBox.style.display = "block";
+
+            table.innerHTML = '<tr class="state-row"><td colspan="4">Could not load assignment records.</td></tr>';
+            return;
+        }
+
+        const data = await res.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+            table.innerHTML = '<tr class="state-row"><td colspan="4">No assignment records found.</td></tr>';
+            return;
+        }
+
+        // Show latest 10, most recent first
+        const rows = [...data].reverse().slice(0, 10);
+        table.innerHTML = "";
+
+        rows.forEach(a => {
+            const fullName = a.user?.fullName || "System User";
+            const initials = fullName
+                .split(" ")
+                .filter(Boolean)
+                .slice(0, 2)
+                .map(n => n[0].toUpperCase())
+                .join("");
+
+            const deviceName = a.device?.deviceName || "Deleted Device";
+            const serialNumber = a.device?.serialNumber || "N/A";
+            const dateStr = a.assignedDate
+                ? new Date(a.assignedDate).toLocaleDateString()
+                : "—";
+            const status = a.status || "Active";
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>
+                <div class="device-info">
+                    <span class="device-name">${escapeHtml(deviceName)}</span>
+                    <span class="device-sn">${escapeHtml(serialNumber)}</span>
+                </div>
+              </td>
+              <td>
+                <div class="user-badge">
+                    <div class="user-avatar">${escapeHtml(initials)}</div>
+                    ${escapeHtml(fullName)}
+                </div>
+              </td>
+              <td style="color:#64748b; font-size:13px;">${escapeHtml(dateStr)}</td>
+              <td><span class="status-pill status-assigned">${escapeHtml(status)}</span></td>
+            `;
+            table.appendChild(tr);
+        });
+
+    } catch (e) {
+        errorBox.innerHTML = `<div class="error-banner">
+            ⚠ Network error — could not reach the server.
+            <button class="retry-btn" onclick="loadAssignments()">Retry</button>
+        </div>`;
+        errorBox.style.display = "block";
+        table.innerHTML = '<tr class="state-row"><td colspan="4">Could not load assignment records.</td></tr>';
+        console.error("loadAssignments error:", e);
+    }
+}
+
+// ─── Select All (works with current filtered list) ────────────────────────────
+document.getElementById("selectAll").addEventListener("change", function() {
+    const options = document.getElementById("deviceId").options;
+    for (const opt of options) {
+        if (!opt.disabled) opt.selected = this.checked;
+    }
 });
 
-// Start
+// ─── Form submit ──────────────────────────────────────────────────────────────
+document.getElementById("assignForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const userId = document.getElementById("employeeId").value;
+    const selected = Array.from(document.getElementById("deviceId").selectedOptions)
+        .map(o => o.value)
+        .filter(Boolean);
+
+    const msg = document.getElementById("msg");
+    const btn = document.getElementById("assignBtn");
+
+    if (!userId) {
+        showMsg(msg, "warning", "Please select an employee first.");
+        return;
+    }
+
+    if (selected.length === 0) {
+        showMsg(msg, "warning", "Please select at least one device.");
+        return;
+    }
+
+    btn.disabled = true;
+    showMsg(msg, "info", `Processing ${selected.length} device(s)...`);
+
+    let success = 0;
+    let failed = 0;
+    for (const id of selected) {
+        try {
+            const res = await fetch(`${API_BASE}/assignments/assign/${id}/${userId}`, {
+                method: "POST",
+                credentials: "include"
+            });
+            if (res.ok) success++;
+            else failed++;
+        } catch (err) {
+            failed++;
+        }
+    }
+
+    if (success > 0) {
+        showMsg(msg, "success", `Successfully assigned ${success} device(s)${failed > 0 ? `, ${failed} failed` : ""}.`);
+        this.reset();
+        document.getElementById("selectAll").checked = false;
+        setTimeout(() => {
+            msg.style.display = "none";
+            loadDevices();
+            loadAssignments();
+        }, 2500);
+    } else {
+        showMsg(msg, "error", "Assignment failed. Please check device status or server logs.");
+    }
+
+    btn.disabled = false;
+});
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function showMsg(el, type, text) {
+    const colors = {
+        success: { bg: "#ebfbee", color: "#2f9e44" },
+        error:   { bg: "#fff5f5", color: "#e03131" },
+        warning: { bg: "#fff9db", color: "#e67700" },
+        info:    { bg: "#e7f5ff", color: "#1971c2" },
+    };
+    const c = colors[type] || colors.info;
+    el.style.background = c.bg;
+    el.style.color = c.color;
+    el.innerText = text;
+    el.style.display = "block";
+}
+
+function escapeHtml(str) {
+    if (str == null) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
 loadNavbar();
 loadDevices();
 loadEmployees();
