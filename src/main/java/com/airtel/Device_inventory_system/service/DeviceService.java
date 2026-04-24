@@ -9,6 +9,7 @@ import com.airtel.Device_inventory_system.model.Device;
 import com.airtel.Device_inventory_system.repositor.DeviceRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DeviceService {
@@ -32,8 +33,7 @@ public class DeviceService {
         return deviceRepository.findByStatus("available");
     }
 
-    public Device getDeviceById(Long id) {
-        return deviceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Device not found"));
+    public Optional<Device> getDeviceById(Long id) {
+        return deviceRepository.findById(id);
     }
 }

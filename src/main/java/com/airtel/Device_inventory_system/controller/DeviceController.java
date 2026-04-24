@@ -1,16 +1,17 @@
 package com.airtel.Device_inventory_system.controller;
 
-
-
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.airtel.Device_inventory_system.model.Device;
 import com.airtel.Device_inventory_system.service.DeviceService;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/devices")
+@CrossOrigin(origins = "*") // ✅ allow frontend (important)
 public class DeviceController {
 
     private final DeviceService deviceService;
@@ -19,27 +20,48 @@ public class DeviceController {
         this.deviceService = deviceService;
     }
 
-    // ADD DEVICE
+    // ✅ ADD DEVICE (FIXED)
     @PostMapping
-    public Device addDevice(@RequestBody Device device) {
-        return deviceService.saveDevice(device);
+    public ResponseEntity<?> addDevice(@RequestBody Device device) {
+
+        // 🔍 DEBUG (see what frontend sends)
+        System.out.println("Incoming Device: " + device);
+
+        // ❌ VALIDATION
+        if (device.getDeviceName() == null || device.getDeviceName().isEmpty()) {
+            return ResponseEntity.badRequest().body("Device name is required");
+        }
+
+        try {
+            Device savedDevice = deviceService.saveDevice(device);
+            return ResponseEntity.ok(savedDevice);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error saving device: " + e.getMessage());
+        }
     }
 
-    // GET ALL DEVICES
+    // ✅ GET ALL DEVICES
     @GetMapping
-    public List<Device> getAllDevices() {
-        return deviceService.getAllDevices();
+    public ResponseEntity<List<Device>> getAllDevices() {
+        return ResponseEntity.ok(deviceService.getAllDevices());
     }
 
-    // GET AVAILABLE DEVICES
+    // ✅ GET AVAILABLE DEVICES
     @GetMapping("/available")
-    public List<Device> getAvailableDevices() {
-        return deviceService.getAvailableDevices();
+    public ResponseEntity<List<Device>> getAvailableDevices() {
+        return ResponseEntity.ok(deviceService.getAvailableDevices());
     }
 
-    // GET DEVICE BY ID
+    // ✅ GET DEVICE BY ID (SAFE)
     @GetMapping("/{id}")
-    public Device getDevice(@PathVariable Long id) {
-        return deviceService.getDeviceById(id);
+    public ResponseEntity<?> getDevice(@PathVariable Long id) {
+
+        Optional<Device> device = deviceService.getDeviceById(id);
+
+        if (device.isPresent()) {
+            return ResponseEntity.ok(device.get());
+        } else {
+            return ResponseEntity.status(404).body("Device not found");
+        }
     }
 }

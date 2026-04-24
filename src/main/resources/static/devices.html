@@ -7,103 +7,85 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-
-body{
-  background:#f4f7fb;
-}
+body{background:#f4f7fb}
 
 /* NAVBAR */
 .navbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 40px;
-  background:white;
+  display:flex;justify-content:space-between;
+  align-items:center;padding:15px 40px;background:white;
 }
 
-.logo{font-weight:bold;color:#333}
-
-.nav-links a{
-  margin:0 10px;
-  text-decoration:none;
-  color:#555;
-}
+.nav-links a{margin:0 10px;text-decoration:none;color:#555}
 
 .logout{
-  background:#e74c3c;
-  color:white;
-  border:none;
-  padding:8px 12px;
-  border-radius:6px;
-  cursor:pointer;
+  background:#e74c3c;color:white;border:none;
+  padding:8px 12px;border-radius:6px;cursor:pointer;
 }
 
 /* CONTAINER */
-.container{
-  padding:40px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
+.container{padding:40px}
+
+/* BUTTON */
+.add-btn{
+  background:#5b5be6;color:white;border:none;
+  padding:10px 15px;border-radius:6px;
+  margin-bottom:20px;cursor:pointer;
 }
 
-/* CARD */
-.card{
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+}
+
+th,td{
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+
+th{background:#f1f1f1}
+
+/* FORM MODAL */
+.modal{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+}
+
+.modal-content{
   background:white;
   padding:20px;
   border-radius:10px;
-  box-shadow:0 10px 20px rgba(0,0,0,0.05);
-}
-
-.card h2{
-  margin-bottom:15px;
-  color:#333;
+  width:400px;
 }
 
 /* FORM */
-.field{
-  margin-bottom:12px;
-}
-
-.field label{
-  display:block;
-  font-size:13px;
-  margin-bottom:5px;
-  color:#555;
-}
-
-.field input, .field select{
-  width:100%;
-  padding:8px;
-  border:1px solid #ccc;
-  border-radius:6px;
+.field{margin-bottom:10px}
+.field input,.field select{
+  width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;
 }
 
 .btn{
-  width:100%;
-  padding:10px;
+  width:100%;padding:10px;border:none;
+  background:#5b5be6;color:white;border-radius:6px;cursor:pointer;
+}
+
+.action-btn{
+  margin-right:5px;
+  padding:5px 10px;
   border:none;
-  background:#5b5be6;
-  color:white;
-  border-radius:6px;
+  border-radius:5px;
   cursor:pointer;
 }
 
-.btn:hover{
-  background:#4444cc;
-}
-
-/* MESSAGE */
-.msg{
-  margin-top:10px;
-  font-size:13px;
-}
-
-/* RESPONSIVE */
-@media(max-width:768px){
-  .container{
-    grid-template-columns:1fr;
-  }
-}
+.edit{background:#3498db;color:white}
+.delete{background:#e74c3c;color:white}
 </style>
 </head>
 
@@ -111,11 +93,10 @@ body{
 
 <!-- NAVBAR -->
 <div class="navbar">
-  <div class="logo">Airtel Devices</div>
+  <div><b>Airtel Devices</b></div>
 
   <div class="nav-links">
     <a href="dashboard.html">Dashboard</a>
-    <a href="#">Users</a>
     <a href="devices.html">Devices</a>
   </div>
 
@@ -125,132 +106,188 @@ body{
 <!-- CONTENT -->
 <div class="container">
 
-  <!-- 🔹 ASSET REGISTRATION -->
-  <div class="card">
-    <h2>Asset Registration</h2>
+  <button class="add-btn" onclick="openForm()">+ Add Device</button>
 
-    <div class="field">
-      <label>Serial Number</label>
-      <input type="text" id="serial" placeholder="Scan or type serial number">
-    </div>
-
-    <div class="field">
-      <label>Device Name</label>
-      <input type="text" id="name" placeholder="e.g. Dell XPS 13">
-    </div>
-
-    <div class="field">
-      <label>Specifications</label>
-      <input type="text" id="specs" placeholder="RAM, CPU, Storage">
-    </div>
-
-    <button class="btn" onclick="registerDevice()">Register Device</button>
-
-    <div class="msg" id="reg-msg"></div>
-  </div>
-
-  <!-- 🔹 DEVICE ASSIGNMENT -->
-  <div class="card">
-    <h2>Assign Device</h2>
-
-    <div class="field">
-      <label>Select Device</label>
-      <select id="device-select"></select>
-    </div>
-
-    <div class="field">
-      <label>Employee ID</label>
-      <input type="number" id="employeeId" placeholder="Enter employee ID">
-    </div>
-
-    <button class="btn" onclick="assignDevice()">Assign</button>
-
-    <div class="msg" id="assign-msg"></div>
-  </div>
+  <!-- TABLE -->
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Serial</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="deviceTable"></tbody>
+  </table>
 
 </div>
 
+<!-- MODAL FORM -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3 id="formTitle">Add Device</h3>
+
+    <form id="deviceForm">
+      <input type="hidden" id="deviceId">
+
+      <div class="field">
+        <input type="text" id="deviceName" placeholder="Device Name" required>
+      </div>
+
+      <div class="field">
+        <select id="type">
+          <option>Laptop</option>
+          <option>Phone</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <input type="text" id="serialNumber" placeholder="Serial">
+      </div>
+
+      <div class="field">
+        <input type="text" id="brand" placeholder="Brand">
+      </div>
+
+      <div class="field">
+        <input type="text" id="model" placeholder="Model">
+      </div>
+
+      <div class="field">
+        <select id="status">
+          <option>Available</option>
+          <option>Assigned</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <select id="conditionStatus">
+          <option>Good</option>
+          <option>Damaged</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <input type="date" id="purchaseDate">
+      </div>
+
+      <button class="btn">Save</button>
+    </form>
+
+  </div>
+</div>
+
 <script>
-// 🔐 PROTECT PAGE
-const user = localStorage.getItem("user");
-if(!user){
-  window.location.href = "login.html";
+// 🔐 PROTECT
+if(!localStorage.getItem("user")){
+  window.location.href="login.html";
 }
 
-// 🚪 LOGOUT
+// LOGOUT
 function logout(){
   localStorage.removeItem("user");
-  window.location.href = "login.html";
+  window.location.href="login.html";
 }
 
-// 📦 REGISTER DEVICE
-async function registerDevice(){
-  const serial = document.getElementById("serial").value;
-  const name = document.getElementById("name").value;
-  const specs = document.getElementById("specs").value;
+// OPEN FORM
+function openForm(device=null){
+  document.getElementById("modal").style.display="flex";
 
-  if(!serial || !name){
-    document.getElementById("reg-msg").innerText = "Fill all fields";
-    return;
-  }
-
-  try{
-    await fetch("http://localhost:8080/api/devices",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({serialNumber:serial, name, specs})
-    });
-
-    document.getElementById("reg-msg").innerText = "Device registered ✔";
-    loadDevices();
-
-  }catch{
-    document.getElementById("reg-msg").innerText = "Error registering device";
+  if(device){
+    document.getElementById("formTitle").innerText="Edit Device";
+    document.getElementById("deviceId").value=device.deviceId;
+    document.getElementById("deviceName").value=device.deviceName;
+    document.getElementById("type").value=device.type;
+    document.getElementById("serialNumber").value=device.serialNumber;
+    document.getElementById("brand").value=device.brand;
+    document.getElementById("model").value=device.model;
+    document.getElementById("status").value=device.status;
+    document.getElementById("conditionStatus").value=device.conditionStatus;
+    document.getElementById("purchaseDate").value=device.purchaseDate;
+  }else{
+    document.getElementById("formTitle").innerText="Add Device";
+    document.getElementById("deviceForm").reset();
+    document.getElementById("deviceId").value="";
   }
 }
 
-// 📥 LOAD DEVICES INTO SELECT
+// CLOSE MODAL
+window.onclick = function(e){
+  if(e.target.classList.contains("modal")){
+    document.getElementById("modal").style.display="none";
+  }
+}
+
+// LOAD DEVICES
 async function loadDevices(){
-  try{
-    const res = await fetch("http://localhost:8080/api/devices");
-    const data = await res.json();
+  const res = await fetch("http://localhost:8080/api/devices");
+  const data = await res.json();
 
-    const select = document.getElementById("device-select");
-    select.innerHTML = "";
+  const table = document.getElementById("deviceTable");
+  table.innerHTML="";
 
-    data.forEach(d=>{
-      const option = document.createElement("option");
-      option.value = d.id;
-      option.textContent = d.name + " (" + d.serialNumber + ")";
-      select.appendChild(option);
-    });
-
-  }catch{
-    console.log("Error loading devices");
-  }
+  data.forEach(d=>{
+    table.innerHTML += `
+      <tr>
+        <td>${d.deviceId}</td>
+        <td>${d.deviceName}</td>
+        <td>${d.type}</td>
+        <td>${d.serialNumber}</td>
+        <td>${d.status}</td>
+        <td>
+          <button class="action-btn edit" onclick='openForm(${JSON.stringify(d)})'>Edit</button>
+          <button class="action-btn delete" onclick="deleteDevice(${d.deviceId})">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
 }
 
 loadDevices();
 
-// 🔗 ASSIGN DEVICE
-async function assignDevice(){
-  const deviceId = document.getElementById("device-select").value;
-  const employeeId = document.getElementById("employeeId").value;
+// SAVE (ADD + EDIT)
+document.getElementById("deviceForm").addEventListener("submit", async function(e){
+  e.preventDefault();
 
-  if(!deviceId || !employeeId){
-    document.getElementById("assign-msg").innerText = "Fill all fields";
-    return;
-  }
+  const id = document.getElementById("deviceId").value;
 
-  try{
-    await fetch(`http://localhost:8080/api/devices/${deviceId}/assign/${employeeId}`,{
-      method:"POST"
+  const data = {
+    deviceName: document.getElementById("deviceName").value,
+    type: document.getElementById("type").value,
+    serialNumber: document.getElementById("serialNumber").value,
+    brand: document.getElementById("brand").value,
+    model: document.getElementById("model").value,
+    status: document.getElementById("status").value,
+    conditionStatus: document.getElementById("conditionStatus").value,
+    purchaseDate: document.getElementById("purchaseDate").value
+  };
+
+  const url = id 
+    ? `http://localhost:8080/api/devices/${id}`
+    : "http://localhost:8080/api/devices";
+
+  const method = id ? "PUT" : "POST";
+
+  await fetch(url,{
+    method:method,
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
+
+  document.getElementById("modal").style.display="none";
+  loadDevices();
+});
+
+// DELETE
+async function deleteDevice(id){
+  if(confirm("Delete this device?")){
+    await fetch(`http://localhost:8080/api/devices/${id}`,{
+      method:"DELETE"
     });
-
-    document.getElementById("assign-msg").innerText = "Device assigned ✔";
-
-  }catch{
-    document.getElementById("assign-msg").innerText = "Error assigning device";
+    loadDevices();
   }
 }
 </script>

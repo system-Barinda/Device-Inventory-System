@@ -10,24 +10,48 @@ public class Device {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "device_id")
     private Long deviceId;
 
+    @Column(name = "device_name", nullable = false)
     private String deviceName;
+
+    @Column(name = "type")
     private String type;
+
+    @Column(name = "serial_number", unique = true)
     private String serialNumber;
+
+    @Column(name = "brand")
     private String brand;
+
+    @Column(name = "model")
     private String model;
-    private String status; // available, assigned, under_repair
-    private String conditionStatus; // good, damaged
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "condition_status")
+    private String conditionStatus;
+
+    @Column(name = "purchase_date")
     private LocalDate purchaseDate;
-    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    // ✅ AUTO SET TIMESTAMP (BEST PRACTICE)
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     // ✅ Constructors
     public Device() {}
 
     public Device(Long deviceId, String deviceName, String type, String serialNumber,
                   String brand, String model, String status, String conditionStatus,
-                  LocalDate purchaseDate, LocalDateTime createdAt) {
+                  LocalDate purchaseDate) {
         this.deviceId = deviceId;
         this.deviceName = deviceName;
         this.type = type;
@@ -37,7 +61,6 @@ public class Device {
         this.status = status;
         this.conditionStatus = conditionStatus;
         this.purchaseDate = purchaseDate;
-        this.createdAt = createdAt;
     }
 
     // ✅ Getters
@@ -62,9 +85,10 @@ public class Device {
     public void setStatus(String status) { this.status = status; }
     public void setConditionStatus(String conditionStatus) { this.conditionStatus = conditionStatus; }
     public void setPurchaseDate(LocalDate purchaseDate) { this.purchaseDate = purchaseDate; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    // ✅ toString (optional but useful for debugging)
+    // ❌ REMOVE setCreatedAt (DB/PrePersist should control it)
+
+    // ✅ toString
     @Override
     public String toString() {
         return "Device{" +
