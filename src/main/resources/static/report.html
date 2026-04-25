@@ -7,7 +7,9 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif}
-body{background:#f4f7fb}
+body{
+background:linear-gradient(120deg,#c6d8ff,#e6c9ff);
+}
 
 .report{
   max-width:950px;
@@ -126,6 +128,24 @@ if(!localStorage.getItem("user")){
 }
 
 /**
+ * LOGOUT FIX (Added here because navbar scripts are blocked)
+ */
+window.handleLogout = async function() {
+    console.log("Logout triggered from Report page...");
+    try {
+      await fetch(`${API_BASE}/auth/logout`, { 
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+      });
+    } catch (e) {
+      console.warn("Backend unreachable, clearing local session.");
+    }
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.replace("login.html");
+};
+
+/**
  * 2. LOAD NAVBAR
  */
 async function loadNavbar(){
@@ -141,7 +161,7 @@ async function loadNavbar(){
 document.getElementById("dateNow").innerText = new Date().toLocaleString();
 
 /**
- * 4. LOAD REPORT DATA (FIXED 🔥)
+ * 4. LOAD REPORT DATA
  */
 async function loadReport(){
   const table = document.getElementById("reportTable");
@@ -152,15 +172,9 @@ async function loadReport(){
       credentials: "include"
     });
 
-    console.log("Audit status:", res.status);
-
-    if(!res.ok){
-      throw new Error("Failed with status " + res.status);
-    }
+    if(!res.ok){ throw new Error("Failed with status " + res.status); }
 
     const data = await res.json();
-    console.log("Audit data:", data);
-
     table.innerHTML = "";
 
     if(!Array.isArray(data) || data.length === 0){
@@ -169,9 +183,7 @@ async function loadReport(){
     }
 
     data.reverse().forEach(a => {
-
       const action = (a.action || "").toLowerCase();
-
       let className = "";
       if(action.includes("assign")) className = "assigned";
       else if(action.includes("return")) className = "returned";
@@ -189,14 +201,7 @@ async function loadReport(){
 
   } catch(e){
     console.error("Report error:", e);
-
-    table.innerHTML = `
-      <tr>
-        <td colspan="4" style="color:red;text-align:center;">
-          Failed to load report. Check backend or login.
-        </td>
-      </tr>
-    `;
+    table.innerHTML = `<tr><td colspan="4" style="color:red;text-align:center;">Failed to load report.</td></tr>`;
   }
 }
 
@@ -204,34 +209,20 @@ async function loadReport(){
  * 5. EXPORT PDF
  */
 function downloadPDF(){
-  if (!window.jspdf) {
-      alert("PDF library not loaded");
-      return;
-  }
-
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-
   doc.setFontSize(16);
   doc.text("Airtel Inventory Report", 14, 20);
-
   let y = 30;
-
   document.querySelectorAll("#reportTable tr").forEach(row => {
     const cols = row.querySelectorAll("td");
-
     if(cols.length > 1){
       const line = `${cols[0].innerText} | ${cols[1].innerText} | ${cols[2].innerText} | ${cols[3].innerText}`;
       doc.text(line.substring(0, 90), 14, y);
       y += 8;
-
-      if(y > 280){
-        doc.addPage();
-        y = 20;
-      }
+      if(y > 280){ doc.addPage(); y = 20; }
     }
   });
-
   doc.save("Airtel_Report.pdf");
 }
 
@@ -240,22 +231,17 @@ function downloadPDF(){
  */
 function downloadExcel(){
   let csv = "Date,Device,User,Action\n";
-
   document.querySelectorAll("#reportTable tr").forEach(row=>{
     const cols = row.querySelectorAll("td");
-
     if(cols.length > 1){
       let rowData = Array.from(cols).map(c => `"${c.innerText}"`);
       csv += rowData.join(",") + "\n";
     }
   });
-
   const blob = new Blob([csv], { type: "text/csv" });
   const link = document.createElement("a");
-
   link.href = URL.createObjectURL(blob);
   link.download = "Airtel_Report.csv";
-
   link.click();
 }
 

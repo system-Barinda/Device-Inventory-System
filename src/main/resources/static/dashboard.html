@@ -50,8 +50,8 @@ body{
 
 /* RIGHT */
 .mock-card{
-  width:220px;
-  height:420px;
+  width:260px;
+  height:auto;
   background:white;
   border-radius:20px;
   box-shadow:0 15px 40px rgba(0,0,0,0.1);
@@ -63,26 +63,25 @@ body{
   height:120px;
   border-radius:50%;
   background:conic-gradient(#ff7a18 0% 40%, #4facfe 40% 70%, #43e97b 70%);
-  margin:auto;
+  margin:15px auto;
 }
 
-/* CARDS */
-.cards{
-  padding:40px;
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:20px;
+/* NEW STATS LIST */
+.stats{
+  margin-top:15px;
 }
 
-.card{
-  background:white;
-  padding:20px;
-  border-radius:12px;
-  box-shadow:0 10px 20px rgba(0,0,0,0.05);
+.stat{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+  font-size:14px;
 }
 
-.card h4{color:#555;margin-bottom:10px}
-.card p{font-size:22px;font-weight:bold;color:#5b5be6}
+.stat span{
+  font-weight:bold;
+  color:#5b5be6;
+}
 
 /* RESPONSIVE */
 @media(max-width:768px){
@@ -108,8 +107,17 @@ body{
 
   <div class="hero-image">
     <div class="mock-card">
-      <h4 style="text-align:center;margin-bottom:20px;">Statistics</h4>
+      <h4 style="text-align:center;margin-bottom:10px;">System Statistics</h4>
+
       <div class="circle"></div>
+
+      <div class="stats">
+        <div class="stat">Users <span id="users-count">0</span></div>
+        <div class="stat">Devices <span id="devices-count">0</span></div>
+        <div class="stat">Active <span id="active-count">0</span></div>
+        <div class="stat">Available <span id="available-count">0</span></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -117,26 +125,41 @@ body{
 <div id="footer-container"></div>
 
 <script>
-/** * 1. AUTH CHECK 
- * We check this immediately before the page even finishes loading
- */
+// AUTH CHECK
 const userStr = localStorage.getItem("user");
 if(!userStr){
   window.location.href = "login.html";
 }
 
-// Display user name safely
 const userData = JSON.parse(userStr);
 document.getElementById("welcome-user").innerText = "Welcome " + (userData.fullName || "User");
 
 /**
- * 2. API CALLS
- * We use relative paths now since your SecurityConfig permits them
+ * LOGOUT FIX (Ensures navbar button works)
  */
+window.handleLogout = async function() {
+    console.log("Logging out from Dashboard...");
+    try {
+      // Notify backend if possible
+      await fetch("/api/auth/logout", { 
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+      });
+    } catch (e) {
+      console.warn("Backend unreachable, clearing local data.");
+    }
+    
+    // Clear all session data
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Redirect to login
+    window.location.replace("login.html");
+};
 
+// LOAD USERS
 async function loadUsers(){
   try{
-    // Changed to match your UserController @RequestMapping
     const res = await fetch("/api/auth/users"); 
     if(res.ok){
         const data = await res.json();
@@ -147,30 +170,31 @@ async function loadUsers(){
   }
 }
 
+// LOAD DEVICES
 async function loadDevices(){
   try{
-    // Ensure this matches your DeviceController path
     const res = await fetch("/api/devices"); 
     if(res.ok){
         const data = await res.json();
         document.getElementById("devices-count").innerText = data.length;
         
-        // Count devices that are actually in use
         const active = data.filter(d => d.status === "Assigned" || d.status === "Active");
         document.getElementById("active-count").innerText = active.length;
+
+        const available = data.filter(d => d.status === "Available");
+        document.getElementById("available-count").innerText = available.length;
     }
   } catch(e) {
     console.error("Error loading devices", e);
   }
 }
 
-// 3. UI COMPONENT LOADERS
+// NAVBAR & FOOTER
 async function loadNavbar(){
   try {
     const res = await fetch("navbar.html");
     if(res.ok) {
-        const data = await res.text();
-        document.getElementById("navbar-container").innerHTML = data;
+        document.getElementById("navbar-container").innerHTML = await res.text();
     }
   } catch(e) {}
 }
@@ -179,22 +203,20 @@ async function loadFooter(){
   try{
     const res = await fetch("footer.html");
     if(res.ok) {
-        const data = await res.text();
-        document.getElementById("footer-container").innerHTML = data;
+        document.getElementById("footer-container").innerHTML = await res.text();
     }
   } catch(e) {}
 }
 
-// Initializing page
+// INIT
 loadNavbar();
 loadFooter();
 loadUsers();
 loadDevices();
 
-// 4. LOGOUT FUNCTION
+// Local fallback logout (if needed for internal buttons)
 function logout(){
-  localStorage.removeItem("user");
-  window.location.href = "login.html";
+  window.handleLogout();
 }
 </script>
 

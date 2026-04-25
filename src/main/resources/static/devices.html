@@ -7,7 +7,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif}
-body{background:#f4f7fb}
+body{background:linear-gradient(120deg,#c6d8ff,#e6c9ff);}
 
 /* CONTAINER */
 .container{padding:40px; max-width: 1200px; margin: auto;}
@@ -210,11 +210,27 @@ const currentHost = window.location.hostname;
 const API_BASE = `http://${currentHost}:8080/api/devices`;
 
 /**
- * 1. AUTH & NAVBAR
+ * 1. AUTH & NAVBAR & LOGOUT FIX
  */
 if(!localStorage.getItem("user")){
   window.location.replace("login.html");
 }
+
+// LOGOUT LOGIC (Added here so the navbar button can see it)
+window.handleLogout = async function() {
+    console.log("Logging out from Devices page...");
+    try {
+      await fetch(`http://${currentHost}:8080/api/auth/logout`, { 
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+      });
+    } catch (e) {
+      console.warn("Backend logout unreachable.");
+    }
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.replace("login.html");
+};
 
 async function loadNavbar(){
   try {
