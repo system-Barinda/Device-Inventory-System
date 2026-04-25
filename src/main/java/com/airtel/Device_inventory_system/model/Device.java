@@ -1,8 +1,10 @@
 package com.airtel.Device_inventory_system.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "devices")
@@ -40,13 +42,19 @@ public class Device {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // ✅ AUTO SET TIMESTAMP (BEST PRACTICE)
+    // ✅ Break circular loop: Device → assignments → Device → ...
+    // JsonIgnoreProperties stops Jackson from serializing back into Assignment fields
+    @OneToMany(mappedBy = "device", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"device", "employee", "hibernateLazyInitializer", "handler"})
+    private List<Assignment> assignments;
+
+    // ✅ AUTO SET TIMESTAMP
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
-    // ✅ Constructors
+    // ─── Constructors ─────────────────────────────────────────────────────────
     public Device() {}
 
     public Device(Long deviceId, String deviceName, String type, String serialNumber,
@@ -63,7 +71,7 @@ public class Device {
         this.purchaseDate = purchaseDate;
     }
 
-    // ✅ Getters
+    // ─── Getters ──────────────────────────────────────────────────────────────
     public Long getDeviceId() { return deviceId; }
     public String getDeviceName() { return deviceName; }
     public String getType() { return type; }
@@ -74,8 +82,9 @@ public class Device {
     public String getConditionStatus() { return conditionStatus; }
     public LocalDate getPurchaseDate() { return purchaseDate; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public List<Assignment> getAssignments() { return assignments; }
 
-    // ✅ Setters
+    // ─── Setters ──────────────────────────────────────────────────────────────
     public void setDeviceId(Long deviceId) { this.deviceId = deviceId; }
     public void setDeviceName(String deviceName) { this.deviceName = deviceName; }
     public void setType(String type) { this.type = type; }
@@ -85,10 +94,10 @@ public class Device {
     public void setStatus(String status) { this.status = status; }
     public void setConditionStatus(String conditionStatus) { this.conditionStatus = conditionStatus; }
     public void setPurchaseDate(LocalDate purchaseDate) { this.purchaseDate = purchaseDate; }
+    public void setAssignments(List<Assignment> assignments) { this.assignments = assignments; }
+    // ❌ No setCreatedAt — controlled by @PrePersist only
 
-    // ❌ REMOVE setCreatedAt (DB/PrePersist should control it)
-
-    // ✅ toString
+    // ─── toString ─────────────────────────────────────────────────────────────
     @Override
     public String toString() {
         return "Device{" +

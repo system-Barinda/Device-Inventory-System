@@ -1,5 +1,6 @@
 package com.airtel.Device_inventory_system.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.persistence.*;
 import java.time.LocalDate;
 
@@ -12,14 +13,16 @@ public class Assignment {
     @Column(name = "assignment_id")
     private Long assignmentId;
 
-    // 🔗 Device
-    @ManyToOne
+    // ✅ Only serialize specific fields from Device — breaks circular loop
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "device_id")
+    @JsonIgnoreProperties({"assignments", "hibernateLazyInitializer", "handler"})
     private Device device;
 
-    // 🔗 Employee
-    @ManyToOne
+    // ✅ Only serialize specific fields from Employee — breaks circular loop
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "employee_id")
+    @JsonIgnoreProperties({"assignments", "password", "hibernateLazyInitializer", "handler"})
     private Employee employee;
 
     @Column(name = "assigned_date")
@@ -31,11 +34,12 @@ public class Assignment {
     @Column(name = "status")
     private String status;
 
-    // Constructor
+    // ─── Constructor ──────────────────────────────────────────────────────────
     public Assignment() {}
 
-    // Getters & Setters
+    // ─── Getters & Setters ────────────────────────────────────────────────────
     public Long getAssignmentId() { return assignmentId; }
+    public void setAssignmentId(Long assignmentId) { this.assignmentId = assignmentId; }
 
     public Device getDevice() { return device; }
     public void setDevice(Device device) { this.device = device; }

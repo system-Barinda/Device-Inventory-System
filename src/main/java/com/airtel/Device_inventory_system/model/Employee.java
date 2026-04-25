@@ -1,8 +1,9 @@
 package com.airtel.Device_inventory_system.model;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "employees")
@@ -28,16 +29,21 @@ public class Employee {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // ✅ Auto set time
+    // ✅ Break circular loop: Employee → assignments → Employee → ...
+    @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"device", "employee", "hibernateLazyInitializer", "handler"})
+    private List<Assignment> assignments;
+
+    // ✅ Auto set timestamp
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
 
-    // ✅ Constructors
+    // ─── Constructors ─────────────────────────────────────────────────────────
     public Employee() {}
 
-    // ✅ Getters & Setters
+    // ─── Getters & Setters ────────────────────────────────────────────────────
     public Long getEmployeeId() { return employeeId; }
     public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
 
@@ -54,4 +60,8 @@ public class Employee {
     public void setDepartment(String department) { this.department = department; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+    // ❌ No setCreatedAt — controlled by @PrePersist only
+
+    public List<Assignment> getAssignments() { return assignments; }
+    public void setAssignments(List<Assignment> assignments) { this.assignments = assignments; }
 }

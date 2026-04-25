@@ -72,3 +72,22 @@ User ───────┐
 3 Keeps history (audit trail)
 4 Supports reporting
 5 Scalable for real company use
+
+
+
+
+## cridentials needed
+
+login:
+username:systembarinda@gmail.com
+password:123
+
+
+
+
+
+
+
+
+
+
